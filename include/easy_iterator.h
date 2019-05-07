@@ -3,6 +3,7 @@
 #include <iterator>
 #include <optional>
 #include <exception>
+#include <utility>
 
 namespace easy_iterator {
 
@@ -15,44 +16,84 @@ namespace easy_iterator {
     };
   }
 
+  namespace increment {
+    template <class T, int A = 1> struct ByValue {
+      void operator () (std::optional<T> &v) const { *v = *v + A; }
+    };
+  }
+
+  namespace dereference {
+    template <class T, class R = T> struct ByValue {
+      R & operator()(T & v) const { return v; }
+    };
+    template <class T, class R = decltype(*std::declval<T>())> struct ByDereferencedValue {
+      R & operator()(T & v) const { return *v; }
+    };
+  }
+
   struct UndefinedIteratorException: public std::exception {
     const char * what()const noexcept override{ return "attempt to dereference an undefined iterator"; }
   };
 
-  template <class T, class C = compare::ByValue<T>> class Iterator: public std::iterator<std::input_iterator_tag, T> {
+  template <
+    class T,
+    typename D = dereference::ByValue<T>,
+    typename C = compare::ByValue<T>
+  > class Iterator: public std::iterator<std::input_iterator_tag, T> {
   protected:
-    C comparer;
-    std::optional<T> current;
+    D dereferencer;
+    C compare;
+    mutable std::optional<T> current;
   public:
     Iterator() = default;
-    Iterator(const std::optional<T> &first, C && _comparer = C()):comparer(std::move(_comparer)){ current = first; }
-    virtual std::optional<T> next(const T &) = 0;
-    T operator *()const{ if (!*this) { throw UndefinedIteratorException(); } return *current; }
-    T * operator->()const{ return &**this; }
-    Iterator &operator++(){ current = next(**this); return *this; }
-    bool operator==(const Iterator &other)const{ return comparer(**this, *other); }
-    bool operator!=(const Iterator &other)const{ return !comparer(**this, *other); }
+    Iterator(
+      const std::optional<T> &first,
+      const D & _dereferencer = D(),
+      const C & _compare = C()
+    ):dereferencer(_dereferencer),compare(_compare),current(first){ }
+    virtual void advance(std::optional<T> &value) = 0;
+    auto & operator *()const{ if (!*this) { throw UndefinedIteratorException(); } return dereferencer(*current); }
+    auto * operator->()const{ return &**this; }
+    Iterator &operator++(){ advance(current); return *this; }
+    bool operator!=(const Iterator &other)const{ return !operator==(other); }
+    bool operator==(const Iterator &other)const{
+      if (!*this) { return !other; }
+      if (!other) { return false; }
+      return compare(*current, *other.current);
+    }
     explicit operator bool()const{ return bool(current); }
   };
-
-  namespace increment {
-    template <class T, T A = 1> struct ByValue {
-      T operator () (const T &v) const { return v + A; }
-    };
-    template <class R, class T = typename R::type> struct ByAddress {
-      R operator () (T &v) const { return *(&v + 1); }
-    };
-  }
-
-  template <class T, typename C = compare::ByValue<T>, typename A = increment::ByValue<T>> struct AdvanceIterator: public easy_iterator::Iterator<T,C> {
-    A advance;
-    explicit AdvanceIterator(T && begin, A && _advance = A(), C && comparer = C()):Iterator<T,C>(std::move(begin), std::move(comparer)), advance(std::forward<A>(_advance)){ }
-    explicit AdvanceIterator(const T & begin, const A & _advance = A()):Iterator<T,C>(begin), advance(_advance){ }
-    explicit AdvanceIterator(const std::optional<T> & begin, const A & _advance = A()):Iterator<T>(begin), advance(_advance){ }
-    AdvanceIterator copyWithValue(T && value)const{ return AdvanceIterator(std::forward<T>(value), A(advance)); }
-    AdvanceIterator copyWithUndefinedValue()const{ return AdvanceIterator(std::optional<T>(), A(advance)); }
-    std::optional<T> next(const T &previous)final override{ return advance(previous); }
+  
+  template <
+    class T,
+    typename F,
+    typename D = dereference::ByValue<T>,
+    typename C = compare::ByValue<T>
+  > class CallbackIterator: public Iterator<T,D,C> {
+  protected:
+    F callback;
+  public:
+    explicit CallbackIterator(
+      const std::optional<T> & begin = std::optional<T>(),
+      const F & _callback = F(),
+      const D & _dereferencer = D(),
+      const C & _compare = C()
+    ):Iterator<T,D,C>(begin, _dereferencer, _compare), callback(_callback){ }
+    void advance(std::optional<T> &value) final override {
+      callback(value);
+    }
   };
+
+  template<
+    class T,
+    class F
+  > CallbackIterator(const T &, const F &) -> CallbackIterator<T, F>;
+
+  template<class T> using IncrementPtrIterator = CallbackIterator<
+    T*,
+    increment::ByValue<T*>,
+    dereference::ByDereferencedValue<T*>
+  >;
 
   template <class I> struct WrappedIterator {
     using iterator = I;
@@ -67,9 +108,9 @@ namespace easy_iterator {
   }
 
   template <class T> auto range(T begin, T end, T increment) {
-    auto incrementer = [=](const T &p){ return p + increment; };
+    auto incrementer = [=](std::optional<T> &p){ (*p) += increment; };
     auto actualEnd = end - ((end - begin) % increment);
-    return wrap(AdvanceIterator(begin, incrementer), AdvanceIterator(actualEnd, incrementer));
+    return wrap(CallbackIterator(begin, incrementer), CallbackIterator(actualEnd, incrementer));
   }
 
   template <class T> auto range(T begin, T end) {
@@ -80,6 +121,4 @@ namespace easy_iterator {
     return range(0, end);
   }
 
-
-
-};
+}

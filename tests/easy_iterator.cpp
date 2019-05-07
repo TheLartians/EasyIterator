@@ -1,19 +1,20 @@
 #include <catch2/catch.hpp>
 #include <functional>
+#include <type_traits>
 
 #include <easy_iterator.h>
 
 using namespace easy_iterator;
 
 TEST_CASE("Iterator","[iterator]"){
-
+  
   struct CountDownIterator: public Iterator<int> {
     using Iterator<int>::Iterator;
-    std::optional<int> next(const int &previous) final override { 
-      if (previous == 0) {
-        return std::optional<int>();
+    void advance(std::optional<int> &value) final override {
+      if (*value == 0) {
+        value.reset();
       } else {
-        return previous - 1;
+        value = *value - 1;
       }
     }
   };
@@ -21,7 +22,7 @@ TEST_CASE("Iterator","[iterator]"){
   SECTION("invalid iterator"){
     CountDownIterator iterator;
     REQUIRE(!iterator);
-    REQUIRE_THROWS_AS(*iterator, easy_iterator::UndefinedIteratorException);
+    REQUIRE_THROWS_AS(*iterator, UndefinedIteratorException);
     REQUIRE_THROWS_WITH(*iterator, "attempt to dereference an undefined iterator");
   }
   
@@ -39,7 +40,7 @@ TEST_CASE("Iterator","[iterator]"){
 
   SECTION("wrapper"){
     int expected = 10;
-    for (auto i: easy_iterator::wrap(CountDownIterator(expected), CountDownIterator(3))) {
+    for (auto i: wrap(CountDownIterator(expected), CountDownIterator(3))) {
       REQUIRE(i == expected);
       --expected;
     }
@@ -56,44 +57,39 @@ TEST_CASE("Iterator","[iterator]"){
     }
     REQUIRE(expected == -1);
     REQUIRE(!iterator);
-    REQUIRE_THROWS_AS(*iterator, easy_iterator::UndefinedIteratorException);
+    REQUIRE_THROWS_AS(*iterator, UndefinedIteratorException);
   }
-
+  
+  SECTION("compare"){
+    REQUIRE(CountDownIterator(1) == CountDownIterator(1));
+    REQUIRE(CountDownIterator() == CountDownIterator());
+    REQUIRE(CountDownIterator(1) != CountDownIterator(2));
+    REQUIRE(CountDownIterator(1) != CountDownIterator());
+  }
 
 }
 
-TEST_CASE("AdvanceIterator", "[iterator]"){
+TEST_CASE("CallbackIterator", "[iterator]"){
 
   SECTION("values"){
-    auto it = easy_iterator::AdvanceIterator(0);
+    auto it = CallbackIterator(0, +[](std::optional<int> &v){ (*v)++; });
     REQUIRE(*it == 0);
-    for (int i=0;i<10;++i,++it) {
+    ++it;
+    REQUIRE(*it == 1);
+    for (int i=*it;i<10;++i) {
       REQUIRE(*it == i);
+      ++it;
     }
-    easy_iterator::AdvanceIterator end(100);
-    while (it != end) { ++it; }
-    REQUIRE(*it == 100);
-  }
-
-  SECTION("custom incrementer"){
-    auto it = easy_iterator::AdvanceIterator(0, [](int v){ return v + 2; });
-    REQUIRE(*it == 0);
-    for (int i=0;i<10;++i,++it) {
-      REQUIRE(*it == 2*i);
-    }
-    easy_iterator::AdvanceIterator end(100);
+    decltype(it) end(100);
     while (it != end) { ++it; }
     REQUIRE(*it == 100);
   }
 
   SECTION("array incrementer"){
     std::vector<int> arr(10);
-    auto it = easy_iterator::AdvanceIterator(
-      std::reference_wrapper(arr[0]),
-      easy_iterator::increment::ByAddress<std::reference_wrapper<int>>(),
-      easy_iterator::compare::ByAddress<int>()
-    );
-    auto end = it.copyWithValue(arr[10]);
+    auto it = IncrementPtrIterator<int>(arr.data());
+    REQUIRE(&*it == arr.data());
+    decltype(it) end(arr.data() + arr.size());
     static_assert(std::is_same<decltype(it),decltype(end)>::value);
     REQUIRE(it != end);
     size_t idx = 0;
@@ -104,7 +100,7 @@ TEST_CASE("AdvanceIterator", "[iterator]"){
     }
     REQUIRE(it == end);
     REQUIRE(idx == 10);
-  }
+   }
 
 }
 
@@ -146,6 +142,49 @@ TEST_CASE("Range", "[iterator]"){
   }
 }
 
-TEST_CASE("Full class example", "[iterator]"){
+TEST_CASE("array class", "[iterator]"){
+
+  class MyArray {
+  private:
+    size_t size;
+    int * data;
+  public:
+    using iterator = IncrementPtrIterator<int>;
+    using const_iterator = IncrementPtrIterator<const int>;
+
+    MyArray(size_t _size):size(_size),data(new int[size]){ }
+    MyArray(const MyArray &) = delete;
+    ~MyArray(){ delete[] data; }
+
+    int &operator[](size_t idx){ return data[idx]; }
+    const int &operator[](size_t idx)const{ return data[idx]; }
+
+    iterator begin() { return iterator(data); }
+    iterator end() { return iterator(data + size); }
+    const_iterator begin() const { return const_iterator(data); }
+    const_iterator end() const { return const_iterator(data + size); }
+  };
+
+  MyArray array(10);
+
+  SECTION("iterate"){
+    size_t idx = 0;
+    for (auto &v: array) {
+      REQUIRE(&v == &array[idx]);
+      ++idx;
+      static_assert(!std::is_const<std::remove_reference<decltype(v)>::type>::value);
+    }
+    REQUIRE(idx == 10);
+  }
+
+  SECTION("const iterate"){
+    size_t idx = 0;
+    for (auto &v: std::as_const(array)) {
+      REQUIRE(&v == &array[idx]);
+      ++idx;
+      static_assert(std::is_const<std::remove_reference<decltype(v)>::type>::value);
+    }
+    REQUIRE(idx == 10);
+  }
 
 }
