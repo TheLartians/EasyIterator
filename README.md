@@ -2,4 +2,5 @@
 [![codecov](https://codecov.io/gh/TheLartians/EasyIterator/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/EasyIterator)
 
 # EasyIterator
-Simple C++ iterator creation
+
+Work in progress: simple C++ iterator creation
