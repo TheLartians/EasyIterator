@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <functional>
 #include <type_traits>
+#include <vector>
 
 #include <easy_iterator.h>
 
@@ -208,4 +209,33 @@ TEST_CASE("Fibonacci","[iterator]"){
   std::advance(fibonacci, 10);
   REQUIRE(*fibonacci == 55);
   
+}
+
+TEST_CASE("Zip","[iterator]"){
+  for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
+    REQUIRE(2*i == j);
+    REQUIRE(3*i == k);
+  }
+}
+
+TEST_CASE("Enumerate","[iterator]"){
+  std::vector<int> vec(10);
+  int count = 0;
+  for (auto [i,v]: enumerate(vec)){
+    REQUIRE(i == count);
+    REQUIRE(&v == &vec[i]);
+    ++count;
+  }
+  REQUIRE(count == 10);
+}
+
+TEST_CASE("Reverse","[iterator]"){
+  std::vector<int> vec(RangeIterator(0), RangeIterator(10));
+  int count = 0;
+  REQUIRE(vec.size() == 10);
+  for (auto [i,v]: enumerate(reverse(vec))){
+    REQUIRE(v == 9 - i);
+    REQUIRE(i == count);
+    ++count;
+  }
 }
