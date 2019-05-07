@@ -101,7 +101,7 @@ namespace easy_iterator {
 
   /**
    * Base class for simple iterators. Takes several template parameters.
-   * Implementations must override the virtual function `advance`.
+   * Implementations must define `operator++()` to update the value of `current`.
    * @param `T` - The data type held by the iterator
    * @param `D` - A functional that dereferences the data. Determines the value type of the iterator.
    * @param `C` - A function that compares two values of type `T`. Used to determine if two iterators are equal.
@@ -122,17 +122,12 @@ namespace easy_iterator {
       const D & _dereferencer = D(),
       const C & _compare = C()
     ):dereferencer(_dereferencer),compare(_compare),current(first){ }
-    /**
-     * Sets `value` to the next iteration value.
-     * The value may be reset to determine the end of iteration.
-     */
-    virtual void advance(std::optional<T> &value) = 0;
     decltype(dereferencer(*current)) operator *()const{
       if (!*this) { throw UndefinedIteratorException(); }
       return dereferencer(*current);
     }
     auto * operator->()const{ return &**this; }
-    Iterator &operator++(){ advance(current); return *this; }
+    inline Iterator &operator++(){ advance(current); return *this; }
     bool operator!=(const Iterator &other)const{ return !operator==(other); }
     bool operator==(const Iterator &other)const{
       if (!*this) { return !other; }
@@ -150,7 +145,7 @@ namespace easy_iterator {
     typename F,
     typename D = dereference::ByValue,
     typename C = compare::ByValue
-  > class CallbackIterator: public Iterator<T,D,C> {
+  > class CallbackIterator final : public Iterator<T,D,C> {
   protected:
     F callback;
   public:
@@ -160,9 +155,7 @@ namespace easy_iterator {
       const D & _dereferencer = D(),
       const C & _compare = C()
     ):Iterator<T,D,C>(begin, _dereferencer, _compare), callback(_callback){ }
-    void advance(std::optional<T> &value) final override {
-      callback(value);
-    }
+    inline CallbackIterator &operator++(){ callback(*this->current); return *this; }
   };
 
   template<
@@ -213,12 +206,10 @@ namespace easy_iterator {
   /**
    * Helper class for `range()`.
    */
-  template <class T> struct RangeIterator: public Iterator<T> {
+  template <class T> struct RangeIterator final: public Iterator<T> {
     T increment;
     RangeIterator(const T &start, const T &_increment = 1): Iterator<T>(start), increment(_increment) {}
-    void advance(std::optional<T> &value) final override {
-      *value += increment;
-    }
+    inline RangeIterator &operator++(){ *this->current += increment; return *this; }
   };
 
   /**

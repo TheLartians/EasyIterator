@@ -192,23 +192,32 @@ TEST_CASE("array class", "[iterator]"){
 
 TEST_CASE("Fibonacci","[iterator]"){
   
-  struct Fibonacci: public Iterator<unsigned> {
-    unsigned next;
-    
-    void advance(std::optional<unsigned> &value) final override {
-      auto current = next;
-      next = next + *value;
-      *value = current;
+struct Fibonacci {
+  unsigned current = 0;
+  unsigned next = 1;
+
+  bool advance() {
+    auto tmp = next;
+    next += current;
+    current = tmp;
+    return true;
+  }
+  
+  unsigned value() {
+    return current;
+  }
+};
+  
+  MakeIterable<Fibonacci> fibonacci;
+  for (auto [i,v]: enumerate(fibonacci)) {
+    if (i == 9){ 
+      REQUIRE(v == 34);
+      break;
     }
-    
-    Fibonacci():Iterator(0), next(1){}
-  };
-  
-  Fibonacci fibonacci;
-  
-  std::advance(fibonacci, 10);
-  REQUIRE(*fibonacci == 55);
-  
+  }
+  auto it = fibonacci.begin();
+  std::advance(it, 10);
+  REQUIRE(*it == 55);
 }
 
 TEST_CASE("Zip","[iterator]"){
