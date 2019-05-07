@@ -188,3 +188,24 @@ TEST_CASE("array class", "[iterator]"){
   }
 
 }
+
+TEST_CASE("Fibonacci","[iterator]"){
+  
+  struct Fibonacci: public Iterator<unsigned> {
+    unsigned next;
+    
+    void advance(std::optional<unsigned> &value) final override {
+      auto current = next;
+      next = next + *value;
+      *value = current;
+    }
+    
+    Fibonacci():Iterator(0), next(1){}
+  };
+  
+  Fibonacci fibonacci;
+  
+  std::advance(fibonacci, 10);
+  REQUIRE(*fibonacci == 55);
+  
+}
