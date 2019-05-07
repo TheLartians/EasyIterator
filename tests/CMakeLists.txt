@@ -23,8 +23,7 @@ CPMAddPackage(
 file(GLOB EasyIteratorTests_sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_executable(EasyIteratorTests ${EasyIteratorTests_sources})
 target_link_libraries(EasyIteratorTests Catch2 EasyIterator)
-set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror -fsanitize=address,undefined -g")
-target_link_options(EasyIteratorTests PUBLIC "-fsanitize=address,undefined")
+set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-Wall -pedantic -Wextra -Werror")
 
 # ---- Add EasyIteratorTests ----
 
