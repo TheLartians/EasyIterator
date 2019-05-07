@@ -10,6 +10,7 @@ project(EasyIterator
 # ---- Configuration variables ----
 
 option(EASY_ITERATOR_ENABLE_TESTS "Enable tests" OFF)
+option(EASY_ITERATOR_ENABLE_EXAMPLES "Enable examples" OFF)
 
 # ---- Include guards ----
 
@@ -88,5 +89,11 @@ install(
 if(${EASY_ITERATOR_ENABLE_TESTS})
   ENABLE_TESTING()  
   add_subdirectory(tests)  
+endif()
+
+# ---- Examples ----
+
+if(${EASY_ITERATOR_ENABLE_EXAMPLES})
+  add_subdirectory(examples)  
 endif()
 

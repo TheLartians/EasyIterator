@@ -52,6 +52,10 @@ namespace easy_iterator {
       }
     };
 
+    template <typename T, bool(T::*Method)()> struct ByMemberCall {
+      void operator () (std::optional<T> &v) const { if(!((*v).*Method)()) v.reset(); }
+    };
+    
   }
 
   /**
@@ -67,14 +71,25 @@ namespace easy_iterator {
     };
 
     struct ByTupleDereference {
-      template <typename ... Args, size_t ... Idx> auto getReferenceTuple(std::tuple<Args...> & v, std::index_sequence<Idx...>) const {
-        return std::make_tuple(std::reference_wrapper(*std::get<Idx>(v))...);
+      template <size_t Idx, class T> auto constexpr getElement(T & v) const {
+        if constexpr (std::is_reference<decltype(*std::get<Idx>(v))>::value) {
+          return std::reference_wrapper(*std::get<Idx>(v));
+        } else {
+          return *std::get<Idx>(v);
+        }
+      }
+      template <size_t ... Idx, class T> auto getReferenceTuple(T & v, std::index_sequence<Idx...>) const {
+          return std::make_tuple(getElement<Idx>(v)...);
       }
       template <typename ... Args> auto operator()(std::tuple<Args...> & v) const { 
         return getReferenceTuple(v, std::make_index_sequence<sizeof...(Args)>());
       }
     };
 
+    template <typename T, typename R, R(T::*Method)()> struct ByMemberCall {
+      R operator () (T &v) const { return (v.*Method)(); }
+    };
+    
   }
 
   /**
@@ -112,7 +127,10 @@ namespace easy_iterator {
      * The value may be reset to determine the end of iteration.
      */
     virtual void advance(std::optional<T> &value) = 0;
-    decltype(dereferencer(*current)) operator *()const{ if (!*this) { throw UndefinedIteratorException(); } return dereferencer(*current); }
+    decltype(dereferencer(*current)) operator *()const{
+      if (!*this) { throw UndefinedIteratorException(); }
+      return dereferencer(*current);
+    }
     auto * operator->()const{ return &**this; }
     Iterator &operator++(){ advance(current); return *this; }
     bool operator!=(const Iterator &other)const{ return !operator==(other); }
@@ -247,5 +265,29 @@ namespace easy_iterator {
   template <class T> auto enumerate(T && t){
     return zip(wrap(RangeIterator(0),RangeIterator(0)), t);
   }
+  
+  namespace make_iterable_detail {
+    template <class T> struct DefaultConstructor {
+      T operator()()const{ return T(); }
+    };
+  }
+  
+  /**
+   * Take a class `T` with that defines the methods `bool T::advance()` and `O T::value()` for any type `O`
+   * and wraps it into an iterable class. The additional template parameter `F` may be used to define the
+   * constuctor used to create `T` instances and is passed to the constructor of `MakeIterable<T,F>`.
+   */
+  template <class T, typename F = make_iterable_detail::DefaultConstructor<T>> struct MakeIterable {
+    using iterator = CallbackIterator<
+      T,
+      increment::ByMemberCall<T, &T::advance>,
+      dereference::ByMemberCall<T,decltype(std::declval<T&>().value()), &T::value>,
+      compare::Never
+    >;
+    F initializer;
+    iterator begin()const{ return iterator(initializer()); }
+    iterator end()const{ return iterator(); }
+    MakeIterable(F _initializer = F()):initializer(_initializer){ }
+  };
 
 }
