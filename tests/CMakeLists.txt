@@ -33,7 +33,6 @@ ADD_TEST(EasyIteratorTests EasyIteratorTests)
 # ---- code coverage ----
 
 if (${ENABLE_TEST_COVERAGE})
-  set_target_properties(EasyIterator PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage --coverage")
   set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 17 COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage --coverage")
   target_link_options(EasyIteratorTests PUBLIC "--coverage")
 endif()
