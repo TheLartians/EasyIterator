@@ -5,6 +5,63 @@
 
 using namespace easy_iterator;
 
+TEST_CASE("Iterator","[iterator]"){
+
+  struct CountDownIterator: public Iterator<int> {
+    using Iterator<int>::Iterator;
+    std::optional<int> next(const int &previous) final override { 
+      if (previous == 0) {
+        return std::optional<int>();
+      } else {
+        return previous - 1;
+      }
+    }
+  };
+
+  SECTION("invalid iterator"){
+    CountDownIterator iterator;
+    REQUIRE(!iterator);
+    REQUIRE_THROWS_AS(*iterator, easy_iterator::UndefinedIteratorException);
+    REQUIRE_THROWS_WITH(*iterator, "attempt to dereference an undefined iterator");
+  }
+  
+  SECTION("iteration"){
+    CountDownIterator iterator(42);
+    REQUIRE(*iterator == 42);
+    auto expected = *iterator;
+    while (*iterator > 10) {
+      REQUIRE(*iterator == expected);
+      ++iterator;
+      --expected;
+    }
+    REQUIRE(expected == 10);
+  }
+
+  SECTION("wrapper"){
+    int expected = 10;
+    for (auto i: easy_iterator::wrap(CountDownIterator(expected), CountDownIterator(3))) {
+      REQUIRE(i == expected);
+      --expected;
+    }
+    REQUIRE(expected == 3);
+  }
+
+  SECTION("abort"){
+    CountDownIterator iterator(10);
+    auto expected = *iterator;
+    while (iterator) {
+      REQUIRE(*iterator == expected);
+      ++iterator;
+      --expected;
+    }
+    REQUIRE(expected == -1);
+    REQUIRE(!iterator);
+    REQUIRE_THROWS_AS(*iterator, easy_iterator::UndefinedIteratorException);
+  }
+
+
+}
+
 TEST_CASE("AdvanceIterator", "[iterator]"){
 
   SECTION("values"){
@@ -87,4 +144,8 @@ TEST_CASE("Range", "[iterator]"){
     }
     REQUIRE(expected == 10);
   }
+}
+
+TEST_CASE("Full class example", "[iterator]"){
+
 }

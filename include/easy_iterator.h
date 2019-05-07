@@ -62,10 +62,14 @@ namespace easy_iterator {
     WrappedIterator(iterator && begin, iterator && end):beginIterator(std::move(begin)),endIterator(std::move(end)){ }
   };
 
+  template <class T> WrappedIterator<T> wrap(T && a, T && b) {
+    return WrappedIterator{std::move(a), std::move(b)};
+  }
+
   template <class T> auto range(T begin, T end, T increment) {
     auto incrementer = [=](const T &p){ return p + increment; };
     auto actualEnd = end - ((end - begin) % increment);
-    return WrappedIterator(AdvanceIterator(begin, incrementer), AdvanceIterator(actualEnd, incrementer));
+    return wrap(AdvanceIterator(begin, incrementer), AdvanceIterator(actualEnd, incrementer));
   }
 
   template <class T> auto range(T begin, T end) {
