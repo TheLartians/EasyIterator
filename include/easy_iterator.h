@@ -442,7 +442,7 @@ namespace easy_iterator {
   /**
    * Returns a pointer to the value if found
    */
-  template <class I, class C> decltype(&*std::declval<I>()) ifFound(const I &it, C &container){
+  template <class I, class C> decltype(&*std::declval<I>()) found(const I &it, C &container){
     if (it != container.end()) { 
       return &*it;
     } else {

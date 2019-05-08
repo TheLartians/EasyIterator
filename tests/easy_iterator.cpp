@@ -336,11 +336,11 @@ TEST_CASE("eraseIfFound") {
   REQUIRE(map.size() == 1);
 }
 
-TEST_CASE("ifFound") {
+TEST_CASE("found") {
   std::map<std::string, int> map;
   map["a"] = 1;
   map["b"] = 2;
-  REQUIRE(ifFound(map.find("a"), map));
-  REQUIRE(&ifFound(map.find("a"), map)->second == &map["a"]);
-  REQUIRE(!ifFound(map.find("c"), map));
+  REQUIRE(found(map.find("a"), map));
+  REQUIRE(&found(map.find("a"), map)->second == &map["a"]);
+  REQUIRE(!found(map.find("c"), map));
 }
