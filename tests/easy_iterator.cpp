@@ -2,6 +2,8 @@
 #include <functional>
 #include <type_traits>
 #include <vector>
+#include <string>
+#include <map>
 
 #include <easy_iterator.h>
 
@@ -325,3 +327,11 @@ TEST_CASE("MakeIterable","[iterator]"){
   
 }
 
+TEST_CASE("remove") {
+  std::map<std::string, int> map;
+  map["a"] = 1;
+  map["b"] = 2;
+  removeIfFound(map.find("a"), map);
+  REQUIRE(map.find("a") == map.end());
+  REQUIRE(map.size() == 1);
+}

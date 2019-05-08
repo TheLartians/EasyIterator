@@ -439,4 +439,15 @@ namespace easy_iterator {
     for (auto [v1,v2]: zip(a,b)) { v2 = t(v1); }
   }
 
+  /**
+   * Removes a value from a container with `find` method.
+   */
+  template <class I, class C> bool removeIfFound(const I &it, C &container){
+    if (it != container.end()) { 
+      container.erase(it);
+      return true;
+    }
+    return false;
+  }
+
 }
