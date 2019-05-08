@@ -56,7 +56,7 @@ for (auto [i,v]: enumerate(MakeIterable<Fibonacci>())){
 ## Installation and usage
 
 EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake scripe to install it gloablly.
-Using the [CPM](https://github.com/TheLartians/CPM) dependency manager, you can use EasyIterator simply by adding the following to your projects' `CMakeLists.txt`.
+Using the [CPM](https://github.com/TheLartians/CPM) dependency manager, you can also include EasyIterator simply by adding the following to your projects' `CMakeLists.txt`.
 
 ```cmake
 CPMAddPackage(
