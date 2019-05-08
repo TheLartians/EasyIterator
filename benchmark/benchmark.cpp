@@ -22,7 +22,7 @@ Integer __attribute__ ((noinline)) test_for (Integer max) {
   return result;
 }
 
-Integer __attribute__ ((noinline)) test_array_iteration (Integer max) {
+Integer __attribute__ ((noinline)) test_ei_array_iteration (Integer max) {
   using namespace easy_iterator;
   Integer result = 0;
   std::vector<int> values(RangeIterator<Integer>(0), RangeIterator<Integer>(max+1));
@@ -63,11 +63,11 @@ void ForLoop(benchmark::State& state) {
   }
 }
 
-void ArrayIteration(benchmark::State& state) {
+void EIArrayIteration(benchmark::State& state) {
   Integer max = 100000;
   benchmark::DoNotOptimize(max);
   for (auto _ : state) {
-    AssertEqual(test_array_iteration(max),max*(max+1)/2);
+    AssertEqual(test_ei_array_iteration(max),max*(max+1)/2);
   }
 }
 
@@ -81,7 +81,7 @@ void StdArrayIteration(benchmark::State& state) {
 
 BENCHMARK(RangeLoop);
 BENCHMARK(ForLoop);
-BENCHMARK(ArrayIteration);
+BENCHMARK(EIArrayIteration);
 BENCHMARK(StdArrayIteration);
 
 BENCHMARK_MAIN();

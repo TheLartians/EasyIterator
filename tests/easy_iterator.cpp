@@ -50,7 +50,7 @@ TEST_CASE("IteratorPrototype","[iterator]"){
 TEST_CASE("Iterator", "[iterator]"){
 
   SECTION("values"){
-    auto it = Iterator(0, +[](int &v){ v++; return true; });
+    auto it = makeIterator(0, +[](int &v){ v++; return true; });
     REQUIRE(*it == 0);
     ++it;
     REQUIRE(*it == 1);
@@ -73,7 +73,7 @@ TEST_CASE("Iterator", "[iterator]"){
     }
     SECTION("iterate to end"){
       ReferenceIterator<int> it(arr.data());
-      auto end = Iterator(arr.data() + arr.size());
+      auto end = makeIterator(arr.data() + arr.size());
       REQUIRE(it != end);
       size_t idx = 0;
       while (it != end) {

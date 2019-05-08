@@ -118,14 +118,17 @@ namespace easy_iterator {
     class T,
     typename D = dereference::ByValue,
     typename C = compare::ByValue
-  > class IteratorPrototype: public std::iterator<std::input_iterator_tag, T> {
+  > class IteratorPrototype: public std::iterator<
+    std::input_iterator_tag,
+    typename std::decay<decltype(std::declval<D>()(std::declval<T&>()))>::type
+  > {
   protected:
     D dereferencer;
     C compare;
   public:
     T value;
-
-    using value_type = decltype(dereferencer(value));
+    using DereferencedType = decltype(dereferencer(value));
+    
     IteratorPrototype() = delete;
     template <class F, class AD = D, class AC = C> explicit IteratorPrototype(
       F && first,
@@ -133,7 +136,7 @@ namespace easy_iterator {
       AC && _compare = C()
     ):dereferencer(std::forward<AD>(_dereferencer)),compare(std::forward<AC>(_compare)), value(std::forward<F>(first)) { }
     
-    value_type operator *() {
+    DereferencedType operator *() {
       return dereferencer(value);
     }
     auto * operator->()const{ return &**this; }
@@ -196,7 +199,7 @@ namespace easy_iterator {
       }
       return *this;
     }
-    typename Base::value_type operator *() {
+    typename Base::DereferencedType operator *() {
       if (!valid) { throw UndefinedIteratorException(); }
       return Base::dereferencer(Base::value);
     }
@@ -228,6 +231,14 @@ namespace easy_iterator {
     typename C
   > Iterator(const T &, const F &, const D &, const C &) -> Iterator<T, F, D, C>;
 
+  template<
+  class T,
+  typename F = increment::ByValue<1>,
+  typename D = dereference::ByValue,
+  typename C = compare::ByValue
+  > Iterator<T,F,D,C> makeIterator(T &&t, F f = F(), D && d = D(), C && c = C()){
+    return Iterator<T,F,D,C>(t,f,d,c);
+  }
 
   /**
    * Iterates by incrementing a pointer value. Returns the dereferenced pointer.
@@ -244,12 +255,9 @@ namespace easy_iterator {
   template <class IB, class IE = IB> struct WrappedIterator {
     IB beginIterator;
     IE endIterator;
-    IB begin() const { return beginIterator; }
-    IE end() const { return endIterator; }
-    template <
-      class AB,
-      class AE
-    > WrappedIterator(AB && begin, AE && end):beginIterator(std::forward<AB>(begin)),endIterator(std::forward<AE>(end)){ }
+    IB &begin() { return beginIterator; }
+    IE &end() { return endIterator; }
+    WrappedIterator(IB && begin, IE && end):beginIterator(std::move(begin)),endIterator(std::move(end)){ }
   };
 
   /**
@@ -316,7 +324,7 @@ namespace easy_iterator {
   template <class T> auto enumerate(T && t){
     return zip(wrap(RangeIterator(0), IterationEnd()), t);
   }
-  
+
   namespace make_iterable_detail {
     template <class T> struct DefaultConstructor {
       T operator()()const{ return T(); }
