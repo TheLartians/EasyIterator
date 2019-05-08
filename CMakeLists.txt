@@ -9,8 +9,9 @@ project(EasyIterator
 
 # ---- Configuration variables ----
 
-option(EASY_ITERATOR_ENABLE_TESTS "Enable tests" OFF)
-option(EASY_ITERATOR_ENABLE_EXAMPLES "Enable examples" OFF)
+option(EASY_ITERATOR_ENABLE_TESTS "Build tests" OFF)
+option(EASY_ITERATOR_BUILD_EXAMPLES "Enable examples" OFF)
+option(EASY_ITERATOR_BUILD_BENCHMARK "Enable benchmark" OFF)
 
 # ---- Include guards ----
 
@@ -93,7 +94,13 @@ endif()
 
 # ---- Examples ----
 
-if(${EASY_ITERATOR_ENABLE_EXAMPLES})
+if(${EASY_ITERATOR_BUILD_EXAMPLES})
   add_subdirectory(examples)  
+endif()
+
+# ---- Benchmark ----
+
+if(${EASY_ITERATOR_BUILD_BENCHMARK})
+  add_subdirectory(benchmark)  
 endif()
 
