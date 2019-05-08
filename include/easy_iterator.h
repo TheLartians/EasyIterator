@@ -50,18 +50,18 @@ namespace easy_iterator {
     };
     
     struct ByTupleIncrement {
-      template <typename ... Args> void dummy(Args &&...) const { }
-      template <class T, size_t ... Idx> void updateValues(T & v, std::index_sequence<Idx...>) const {
+      template <typename ... Args> void dummy(Args &&...) { }
+      template <class T, size_t ... Idx> void updateValues(T & v, std::index_sequence<Idx...>) {
         dummy(++std::get<Idx>(v)...);
       }
-      template <typename ... Args> bool operator()(std::tuple<Args...> & v) const {
+      template <typename ... Args> bool operator()(std::tuple<Args...> & v) {
         updateValues(v, std::make_index_sequence<sizeof...(Args)>());
         return true;
       }
     };
 
     template <typename T, bool(T::*Method)()> struct ByMemberCall {
-      bool operator () (T &v) const { return (v.*Method)(); }
+      bool operator () (T &v) { return (v.*Method)(); }
     };
     
   }
@@ -124,6 +124,7 @@ namespace easy_iterator {
     C compare;
   public:
     T value;
+
     using value_type = decltype(dereferencer(value));
     IteratorPrototype() = delete;
     template <class F, class AD = D, class AC = C> IteratorPrototype(
@@ -160,6 +161,7 @@ namespace easy_iterator {
 
   /**
    * IteratorPrototype where advance is defined by the functional held by `F`.
+   * In self-contained iterators the
    */
   template <
     class T,
@@ -179,9 +181,7 @@ namespace easy_iterator {
       const C & _compare = C()
     ):IteratorPrototype<T,D,C>(std::forward<TT>(begin), _dereferencer, _compare), callback(_callback){ }
     Iterator &operator++(){
-      if (valid){
-        valid = callback(this->value);
-      }
+      if (valid){ valid = callback(this->value); }
       return *this;
     }
     typename Base::value_type operator *() {
@@ -215,6 +215,7 @@ namespace easy_iterator {
     typename D,
     typename C
   > Iterator(const T &, const F &, const D &, const C &) -> Iterator<T, F, D, C>;
+
 
   /**
    * Iterates by incrementing a pointer value. Returns the dereferenced pointer.
@@ -252,6 +253,8 @@ namespace easy_iterator {
     RangeIterator &operator++(){ IteratorPrototype<T>::value += increment; return *this; }
   };
 
+  template <class T> RangeIterator(const T &)->RangeIterator<T>;
+  
   /**
    * Returns an iterator that increases it's value from `begin` to the first value <= `end` by `increment` for each step.
    */
@@ -327,5 +330,7 @@ namespace easy_iterator {
   template <class T, class I = increment::ByValue<1>> auto ValuesBetween(T * begin, T * end) {
     return wrap(ReferenceIterator<T, I>(begin), Iterator(end));
   }
+  
+  
   
 }
