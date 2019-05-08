@@ -13,12 +13,7 @@ endif()
 # ---- Requires ----
 
 if(NOT TARGET EasyIterator)
-  include(../cmake/CPM.cmake)
-  CPMAddPackage(
-    NAME EasyIterator
-    GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
-    GIT_TAG master
-  )
+  find_package(EasyIterator REQUIRED)
 endif()
 
 # ---- Create binaries ----
