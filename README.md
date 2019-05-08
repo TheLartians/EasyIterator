@@ -63,7 +63,7 @@ Using the [CPM](https://github.com/TheLartians/CPM) dependency manager, you can 
 ```cmake
 CPMAddPackage(
   NAME EasyIterator
-  VERSION 1.0
+  VERSION 1.1
   GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
 )
 ```
