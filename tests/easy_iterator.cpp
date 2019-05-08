@@ -3,29 +3,21 @@
 #include <type_traits>
 #include <vector>
 
+#include <iostream>
+
 #include <easy_iterator.h>
 
 using namespace easy_iterator;
 
-TEST_CASE("Iterator","[iterator]"){
+TEST_CASE("IteratorPrototype","[iterator]"){
   
-  struct CountDownIterator: public Iterator<int> {
-    using Iterator<int>::Iterator;
-    void advance(std::optional<int> &value) final override {
-      if (*value == 0) {
-        value.reset();
-      } else {
-        value = *value - 1;
-      }
+  struct CountDownIterator: public IteratorPrototype<int> {
+    using IteratorPrototype<int>::IteratorPrototype;
+    CountDownIterator & operator++() {
+      --value;
+      return *this;
     }
   };
-
-  SECTION("invalid iterator"){
-    CountDownIterator iterator;
-    REQUIRE(!iterator);
-    REQUIRE_THROWS_AS(*iterator, UndefinedIteratorException);
-    REQUIRE_THROWS_WITH(*iterator, "attempt to dereference an undefined iterator");
-  }
   
   SECTION("iteration"){
     CountDownIterator iterator(42);
@@ -47,33 +39,18 @@ TEST_CASE("Iterator","[iterator]"){
     }
     REQUIRE(expected == 3);
   }
-
-  SECTION("abort"){
-    CountDownIterator iterator(10);
-    auto expected = *iterator;
-    while (iterator) {
-      REQUIRE(*iterator == expected);
-      ++iterator;
-      --expected;
-    }
-    REQUIRE(expected == -1);
-    REQUIRE(!iterator);
-    REQUIRE_THROWS_AS(*iterator, UndefinedIteratorException);
-  }
   
   SECTION("compare"){
     REQUIRE(CountDownIterator(1) == CountDownIterator(1));
-    REQUIRE(CountDownIterator() == CountDownIterator());
     REQUIRE(CountDownIterator(1) != CountDownIterator(2));
-    REQUIRE(CountDownIterator(1) != CountDownIterator());
   }
 
 }
 
-TEST_CASE("CallbackIterator", "[iterator]"){
+TEST_CASE("Iterator", "[iterator]"){
 
   SECTION("values"){
-    auto it = CallbackIterator(0, +[](std::optional<int> &v){ (*v)++; });
+    auto it = makeIterator(0, +[](int &v){ v++; return true; });
     REQUIRE(*it == 0);
     ++it;
     REQUIRE(*it == 1);
@@ -88,19 +65,34 @@ TEST_CASE("CallbackIterator", "[iterator]"){
 
   SECTION("array incrementer"){
     std::vector<int> arr(10);
-    auto it = IncrementPtrIterator<int>(arr.data());
-    REQUIRE(&*it == arr.data());
-    decltype(it) end(arr.data() + arr.size());
-    static_assert(std::is_same<decltype(it),decltype(end)>::value);
-    REQUIRE(it != end);
-    size_t idx = 0;
-    while (it != end) { 
-      REQUIRE(&static_cast<int &>(*it) == &arr[idx]);
+    SECTION("manual iteration"){
+      ReferenceIterator<int> it(arr.data());
+      REQUIRE(&*it == &arr[0]);
       ++it;
-      ++idx;
+      REQUIRE(&*it == &arr[1]);
     }
-    REQUIRE(it == end);
-    REQUIRE(idx == 10);
+    SECTION("iterate to end"){
+      ReferenceIterator<int> it(arr.data());
+      auto end = makeIterator(arr.data() + arr.size());
+      REQUIRE(it != end);
+      size_t idx = 0;
+      while (it != end) {
+        REQUIRE(&*it == &arr[idx]);
+        ++it;
+        ++idx;
+      }
+      REQUIRE(it == end);
+      REQUIRE(idx == 10);
+    }
+    SECTION("valuesBetween"){
+      size_t idx = 0;
+      for (auto &v: valuesBetween(arr.data(), arr.data() + arr.size())) {
+        static_assert(!std::is_const<std::remove_reference<decltype(v)>::type>::value);
+        REQUIRE(&v == &arr[idx]);
+        ++idx;
+      }
+      REQUIRE(idx == 10);
+    }
    }
 
 }
@@ -141,6 +133,87 @@ TEST_CASE("Range", "[iterator]"){
     }
     REQUIRE(expected == 10);
   }
+  
+  SECTION("modifiers"){
+    auto a = range(5,20,3);
+    int expected = 5;
+    SECTION("copy"){
+      auto b = a;
+      for (auto i: b) {
+        REQUIRE(i == expected);
+        expected = expected + 3;
+      }
+    }
+    SECTION("const"){
+      for (auto i: std::as_const(a)) {
+        REQUIRE(i == expected);
+        expected = expected + 3;
+      }
+    }
+    REQUIRE(expected == 20);
+  }
+}
+
+TEST_CASE("Zip","[iterator]"){
+  SECTION("with ranges"){
+    unsigned expected = 0;
+    for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
+      REQUIRE(i == expected);
+      REQUIRE(2*i == j);
+      REQUIRE(3*i == k);
+      expected++;
+    }
+    REQUIRE(expected == 10);
+  }
+  
+  SECTION("with arrays"){
+    std::vector<int> integers(10);
+    unsigned expected = 0;
+    for (auto [i,v]: zip(range(10), integers)) {
+      REQUIRE(i == expected);
+      REQUIRE(&integers[i] == &v);
+      v = i;
+      REQUIRE(integers[i] == i);
+      expected++;
+    }
+    REQUIRE(expected == 10);
+  }
+
+  
+}
+
+TEST_CASE("Enumerate","[iterator]"){
+  std::vector<int> vec(10);
+  int count = 0;
+  for (auto [i,v]: enumerate(vec)){
+    REQUIRE(i == count);
+    REQUIRE(&v == &vec[i]);
+    ++count;
+  }
+  REQUIRE(count == 10);
+}
+
+TEST_CASE("Reverse","[iterator]"){
+  std::vector<int> vec(rangeValue(0), rangeValue(10));
+  int count = 0;
+  REQUIRE(vec.size() == 10);
+  for (auto [i,v]: enumerate(reverse(vec))){
+    REQUIRE(v == 9 - i);
+    REQUIRE(i == count);
+    ++count;
+  }
+}
+
+TEST_CASE("fill","[iterator]"){
+  std::vector<int> vec(10);
+  fill(vec, 42);
+  for(auto v: vec){ REQUIRE(v == 42); }
+}
+
+TEST_CASE("copy","[iterator]"){
+  std::vector<int> vec(10);
+  copy(range(10), vec);
+  for(auto [i, v]: enumerate(vec)){ REQUIRE(v == i); }
 }
 
 TEST_CASE("array class", "[iterator]"){
@@ -150,8 +223,8 @@ TEST_CASE("array class", "[iterator]"){
     size_t size;
     int * data;
   public:
-    using iterator = IncrementPtrIterator<int>;
-    using const_iterator = IncrementPtrIterator<const int>;
+    using iterator = ReferenceIterator<int>;
+    using const_iterator = ReferenceIterator<const int>;
 
     MyArray(size_t _size):size(_size),data(new int[size]){ }
     MyArray(const MyArray &) = delete;
@@ -189,53 +262,50 @@ TEST_CASE("array class", "[iterator]"){
   }
 
 }
+ 
 
-TEST_CASE("Fibonacci","[iterator]"){
+TEST_CASE("MakeIterable","[iterator]"){
   
-  struct Fibonacci: public Iterator<unsigned> {
-    unsigned next;
+  struct Countdown {
+    unsigned current;
     
-    void advance(std::optional<unsigned> &value) final override {
-      auto current = next;
-      next = next + *value;
-      *value = current;
+    Countdown(unsigned start): current(start) {}
+    
+    bool advance() {
+      if (current == 0) { return false; }
+      current--;
+      return true;
     }
     
-    Fibonacci():Iterator(0), next(1){}
+    unsigned value() {
+      return current;
+    }
   };
   
-  Fibonacci fibonacci;
+  SECTION("iterate"){
+    auto it = MakeIterable<Countdown>(1).begin();
+    REQUIRE(it);
+    REQUIRE(it != IterationEnd());
+    REQUIRE(*it == 1);
+    ++it;
+    REQUIRE(it);
+    REQUIRE(it != IterationEnd());
+    REQUIRE(*it == 0);
+    ++it;
+    REQUIRE(!it);
+    REQUIRE_THROWS_AS(*it, UndefinedIteratorException);
+    REQUIRE_THROWS_WITH(*it, "attempt to dereference an undefined iterator");
+    REQUIRE(it == IterationEnd());
+  }
   
-  std::advance(fibonacci, 10);
-  REQUIRE(*fibonacci == 55);
+  SECTION("iterate"){
+    unsigned count = 0;
+    for (auto v: MakeIterable<Countdown>(10)) {
+      REQUIRE(v == 10-count);
+      count++;
+    }
+    REQUIRE(count == 11);
+  }
   
 }
 
-TEST_CASE("Zip","[iterator]"){
-  for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
-    REQUIRE(2*i == j);
-    REQUIRE(3*i == k);
-  }
-}
-
-TEST_CASE("Enumerate","[iterator]"){
-  std::vector<int> vec(10);
-  int count = 0;
-  for (auto [i,v]: enumerate(vec)){
-    REQUIRE(i == count);
-    REQUIRE(&v == &vec[i]);
-    ++count;
-  }
-  REQUIRE(count == 10);
-}
-
-TEST_CASE("Reverse","[iterator]"){
-  std::vector<int> vec(RangeIterator(0), RangeIterator(10));
-  int count = 0;
-  REQUIRE(vec.size() == 10);
-  for (auto [i,v]: enumerate(reverse(vec))){
-    REQUIRE(v == 9 - i);
-    REQUIRE(i == count);
-    ++count;
-  }
-}

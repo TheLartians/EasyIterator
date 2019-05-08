@@ -66,5 +66,5 @@ script:
   - cmake --build build/test
   - CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
   # examples
-  # - cmake -Hexamples -Bbuild/examples  
-  # - cmake --build build/examples
+  - cmake -Hexamples -Bbuild/examples  
+  - cmake --build build/examples
