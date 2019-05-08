@@ -46,7 +46,7 @@ namespace easy_iterator {
    */
   namespace increment {
     template <int A> struct ByValue {
-      template <class T> bool operator () (T &v) const { v = v + A; return true; }
+      template <class T> void operator () (T &v) const { v = v + A; }
     };
     
     struct ByTupleIncrement {
@@ -54,14 +54,13 @@ namespace easy_iterator {
       template <class T, size_t ... Idx> void updateValues(T & v, std::index_sequence<Idx...>) {
         dummy(++std::get<Idx>(v)...);
       }
-      template <typename ... Args> bool operator()(std::tuple<Args...> & v) {
+      template <typename ... Args> void operator()(std::tuple<Args...> & v) {
         updateValues(v, std::make_index_sequence<sizeof...(Args)>());
-        return true;
       }
     };
 
-    template <typename T, bool(T::*Method)()> struct ByMemberCall {
-      bool operator () (T &v) { return (v.*Method)(); }
+    template <typename T, auto(T::*Method)()> struct ByMemberCall {
+      auto operator () (T &v) { return (v.*Method)(); }
     };
     
   }
@@ -71,9 +70,17 @@ namespace easy_iterator {
    */
   namespace dereference {
     struct ByValue {
+      template <class T> T operator()(T & v) const { return v; }
+    };
+    
+    struct ByConstValueReference {
+      template <class T> const T & operator()(T & v) const { return v; }
+    };
+    
+    struct ByValueReference {
       template <class T> T & operator()(T & v) const { return v; }
     };
-
+    
     struct ByValueDereference {
       template <class T> auto & operator()(T & v) const { return *v; }
     };
@@ -116,7 +123,7 @@ namespace easy_iterator {
    */
   template <
     class T,
-    typename D = dereference::ByValue,
+    typename D = dereference::ByValueReference,
     typename C = compare::ByValue
   > class IteratorPrototype: public std::iterator<
     std::input_iterator_tag,
@@ -163,6 +170,18 @@ namespace easy_iterator {
     typename C
   > IteratorPrototype(const T &, const D &, const C &) -> IteratorPrototype<T, D, C>;
 
+  namespace iterator_detail{
+    struct WithState {
+      constexpr static bool hasState = true;
+      bool state = true;
+    };
+    struct WithoutState {
+      constexpr static bool hasState = false;
+    };
+    
+    template <class F, class T> static constexpr bool needsState = !std::is_same<void, decltype(std::declval<F>()(std::declval<T&>()))>::value;
+  }
+  
   /**
    * IteratorPrototype where advance is defined by the functional held by `F`.
    * In self-contained iterators the
@@ -170,13 +189,15 @@ namespace easy_iterator {
   template <
     class T,
     typename F = increment::ByValue<1>,
-    typename D = dereference::ByValue,
+    typename D = dereference::ByValueReference,
     typename C = compare::ByValue
-  > class Iterator final : public IteratorPrototype<T,D,C> {
+  > class Iterator final :
+    public IteratorPrototype<T,D,C>,
+    public std::conditional<iterator_detail::needsState<F,T>,iterator_detail::WithState, iterator_detail::WithoutState>::type
+  {
   protected:
-    F callback;
-    bool valid = true;
     using Base = IteratorPrototype<T,D,C>;
+    F callback;
   public:
     template <
       typename TT,
@@ -190,23 +211,40 @@ namespace easy_iterator {
       TC && _compare = C()
     ):IteratorPrototype<T,D,C>(std::forward<TT>(begin), std::forward<TD>(_dereferencer), std::forward<TC>(_compare)), callback(_callback){ }
     Iterator &operator++(){
-      if (valid){
-        if constexpr (std::is_same<void, decltype(callback(this->value))>::value) {
-          callback(this->value);
-        } else {
-          valid = callback(this->value);
+      if constexpr (Iterator::hasState) {
+        if (Iterator::state) {
+          Iterator::state = callback(Base::value);
         }
+      } else {
+        callback(Base::value);
       }
       return *this;
     }
     typename Base::DereferencedType operator *() {
-      if (!valid) { throw UndefinedIteratorException(); }
+      if constexpr (Iterator::hasState) {
+        if(!Iterator::state) {
+          throw UndefinedIteratorException();
+        }
+      }
       return Base::dereferencer(Base::value);
     }
     using Base::operator==;
     using Base::operator!=;
-    bool operator==(const IterationEnd &)const{ return !valid; }
-    bool operator!=(const IterationEnd &)const{ return valid; }
+    bool operator==(const IterationEnd &other)const{ return !operator!=(other); }
+    bool operator!=(const IterationEnd &)const{
+      if constexpr (Iterator::hasState) {
+        return Iterator::state;
+      } else {
+        return true;
+      }
+    }
+    explicit operator bool() const {
+      if constexpr (Iterator::hasState) {
+        return Iterator::state;
+      } else {
+        return true;
+      }
+    }
   };
 
   template<
@@ -234,7 +272,7 @@ namespace easy_iterator {
   template<
   class T,
   typename F = increment::ByValue<1>,
-  typename D = dereference::ByValue,
+  typename D = dereference::ByValueReference,
   typename C = compare::ByValue
   > Iterator<T,F,D,C> makeIterator(T &&t, F f = F(), D && d = D(), C && c = C()){
     return Iterator<T,F,D,C>(t,f,d,c);
@@ -253,15 +291,15 @@ namespace easy_iterator {
    * Helper class for `wrap()`.
    */
   template <class IB, class IE = IB> struct WrappedIterator {
-    IB beginIterator;
-    IE endIterator;
-    IB &begin() { return beginIterator; }
-    IE &end() { return endIterator; }
+    mutable IB beginIterator;
+    mutable IE endIterator;
+    IB && begin() const { return std::move(beginIterator); }
+    IE && end() const { return std::move(endIterator); }
     WrappedIterator(IB && begin, IE && end):beginIterator(std::move(begin)),endIterator(std::move(end)){ }
   };
 
   /**
-   * Wraps two iterators into a container with begin/end methods to match the C++ iterator convention.
+   * Wraps two iterators into a single-use container with begin/end methods to match the C++ iterator convention.
    */
   template <class IB, class IE> auto wrap(IB && a, IE && b) {
     return WrappedIterator<IB, IE>(std::forward<IB>(a), std::forward<IE>(b));
@@ -270,10 +308,14 @@ namespace easy_iterator {
   /**
    * Helper class for `range()`.
    */
-  template <class T> struct RangeIterator final: public IteratorPrototype<T> {
+  template <class T> struct RangeIterator final: public IteratorPrototype<T, dereference::ByValue> {
     T increment;
-    RangeIterator(const T &start, const T &_increment = 1): IteratorPrototype<T>(start), increment(_increment) {}
-    RangeIterator &operator++(){ IteratorPrototype<T>::value += increment; return *this; }
+    RangeIterator(const T &start, const T &_increment = 1):
+      IteratorPrototype<T, dereference::ByValue>(start),
+      increment(_increment) {
+    }
+    
+    RangeIterator &operator++(){ RangeIterator::value += increment; return *this; }
   };
   
   template <class T> RangeIterator<T> rangeValue(T v, T i = 1){
@@ -311,6 +353,7 @@ namespace easy_iterator {
 
   /**
    * Returns an iterable object where all argument iterators are traversed simultaneously.
+   * Behaviour is undefined if the iterators do not have the same length.
    */
   template <typename ... Args> auto zip(Args && ... args){
     auto begin = Iterator(std::make_tuple(args.begin()...), increment::ByTupleIncrement(), dereference::ByTupleDereference(), compare::ByLastTupleElementMatch());
@@ -332,21 +375,22 @@ namespace easy_iterator {
   }
   
   /**
-   * Take a class `T` with that defines the methods `bool T::advance()` and `O T::value()` for any type `O`
-   * and wraps it into an iterable class. The additional template parameter `F` may be used to define the
-   * constuctor used to create `T` instances and is passed to the constructor of `MakeIterable<T,F>`.
+   * Take a class `T` with that defines the methods `T::advance()` and `O T::value()` for any type `O`
+   * and wraps it into a single-use iterable class. The return value of `T::advance()` is used to indicate the
+   * state of the iterator.
    */
-  template <class T, typename F = make_iterable_detail::DefaultConstructor<T>> struct MakeIterable {
-    using iterator = Iterator<
+  template <class T> struct MakeIterable {
+    mutable Iterator<
       T,
       increment::ByMemberCall<T, &T::advance>,
       dereference::ByMemberCall<T,decltype(std::declval<T&>().value()), &T::value>,
       compare::Never
-    >;
-    F initializer;
-    iterator begin()const{ return iterator(initializer()); }
-    IterationEnd end()const{ return IterationEnd(); }
-    MakeIterable(F _initializer = F()):initializer(_initializer){ }
+    > start;
+    auto && begin()const{ return std::move(start); }
+    auto end()const{ return IterationEnd(); }
+    
+    explicit MakeIterable(T && value):start(std::move(value)){ }
+    template <typename ... Args> explicit MakeIterable(Args && ... args):start(std::forward<Args>(args)...){ }
   };
 
   /**
@@ -356,6 +400,24 @@ namespace easy_iterator {
     return wrap(ReferenceIterator<T, I>(begin), Iterator(end));
   }
   
+  /**
+   * copy-assigns the given value to every element in a container
+   */
+  template <class T, class A> void fill(A &arr, const T & value){
+    for (auto &v: arr) {
+      v = value;
+    }
+  }
   
-  
+  /**
+   * copies values from one container to another.
+   * @param `a` - the container with values to be copies.
+   * @param `b` - the target container.
+   * @param `f` (optional) - a function to transform values before copying.
+   * Behaviour is undefined if `a` and `b` do not have the same size.
+   */
+  template <class A, class B, class T = dereference::ByValueReference> void copy(const A &a, B &b, T && t = T()){
+    for (auto [v1,v2]: zip(a,b)) { v2 = t(v1); }
+  }
+
 }

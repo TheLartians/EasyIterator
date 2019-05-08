@@ -133,13 +133,53 @@ TEST_CASE("Range", "[iterator]"){
     }
     REQUIRE(expected == 10);
   }
+  
+  SECTION("modifiers"){
+    auto a = range(5,20,3);
+    int expected = 5;
+    SECTION("copy"){
+      auto b = a;
+      for (auto i: b) {
+        REQUIRE(i == expected);
+        expected = expected + 3;
+      }
+    }
+    SECTION("const"){
+      for (auto i: std::as_const(a)) {
+        REQUIRE(i == expected);
+        expected = expected + 3;
+      }
+    }
+    REQUIRE(expected == 20);
+  }
 }
 
 TEST_CASE("Zip","[iterator]"){
-  for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
-    REQUIRE(2*i == j);
-    REQUIRE(3*i == k);
+  SECTION("with ranges"){
+    unsigned expected = 0;
+    for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
+      REQUIRE(i == expected);
+      REQUIRE(2*i == j);
+      REQUIRE(3*i == k);
+      expected++;
+    }
+    REQUIRE(expected == 10);
   }
+  
+  SECTION("with arrays"){
+    std::vector<int> integers(10);
+    unsigned expected = 0;
+    for (auto [i,v]: zip(range(10), integers)) {
+      REQUIRE(i == expected);
+      REQUIRE(&integers[i] == &v);
+      v = i;
+      REQUIRE(integers[i] == i);
+      expected++;
+    }
+    REQUIRE(expected == 10);
+  }
+
+  
 }
 
 TEST_CASE("Enumerate","[iterator]"){
@@ -162,6 +202,18 @@ TEST_CASE("Reverse","[iterator]"){
     REQUIRE(i == count);
     ++count;
   }
+}
+
+TEST_CASE("fill","[iterator]"){
+  std::vector<int> vec(10);
+  fill(vec, 42);
+  for(auto v: vec){ REQUIRE(v == 42); }
+}
+
+TEST_CASE("copy","[iterator]"){
+  std::vector<int> vec(10);
+  copy(range(10), vec);
+  for(auto [i, v]: enumerate(vec)){ REQUIRE(v == i); }
 }
 
 TEST_CASE("array class", "[iterator]"){
@@ -212,15 +264,16 @@ TEST_CASE("array class", "[iterator]"){
 }
  
 
-TEST_CASE("Fibonacci","[iterator]"){
-  struct Fibonacci {
-    unsigned current = 0;
-    unsigned next = 1;
-
+TEST_CASE("MakeIterable","[iterator]"){
+  
+  struct Countdown {
+    unsigned current;
+    
+    Countdown(unsigned start): current(start) {}
+    
     bool advance() {
-      auto tmp = next;
-      next += current;
-      current = tmp;
+      if (current == 0) { return false; }
+      current--;
       return true;
     }
     
@@ -229,15 +282,30 @@ TEST_CASE("Fibonacci","[iterator]"){
     }
   };
   
-  MakeIterable<Fibonacci> fibonacci;
-  for (auto [i,v]: enumerate(fibonacci)) {
-    if (i == 9){ 
-      REQUIRE(v == 34);
-      break;
-    }
+  SECTION("iterate"){
+    auto it = MakeIterable<Countdown>(1).begin();
+    REQUIRE(it);
+    REQUIRE(it != IterationEnd());
+    REQUIRE(*it == 1);
+    ++it;
+    REQUIRE(it);
+    REQUIRE(it != IterationEnd());
+    REQUIRE(*it == 0);
+    ++it;
+    REQUIRE(!it);
+    REQUIRE_THROWS_AS(*it, UndefinedIteratorException);
+    REQUIRE_THROWS_WITH(*it, "attempt to dereference an undefined iterator");
+    REQUIRE(it == IterationEnd());
   }
-  auto it = fibonacci.begin();
-  std::advance(it, 10);
-  REQUIRE(*it == 55);
+  
+  SECTION("iterate"){
+    unsigned count = 0;
+    for (auto v: MakeIterable<Countdown>(10)) {
+      REQUIRE(v == 10-count);
+      count++;
+    }
+    REQUIRE(count == 11);
+  }
+  
 }
 
