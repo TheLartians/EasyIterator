@@ -327,11 +327,20 @@ TEST_CASE("MakeIterable","[iterator]"){
   
 }
 
-TEST_CASE("remove") {
+TEST_CASE("removeIfFound") {
   std::map<std::string, int> map;
   map["a"] = 1;
   map["b"] = 2;
   removeIfFound(map.find("a"), map);
   REQUIRE(map.find("a") == map.end());
   REQUIRE(map.size() == 1);
+}
+
+TEST_CASE("getIfFound") {
+  std::map<std::string, int> map;
+  map["a"] = 1;
+  map["b"] = 2;
+  REQUIRE(getIfFound(map.find("a"), map));
+  REQUIRE(&getIfFound(map.find("a"), map)->second == &map["a"]);
+  REQUIRE(getIfFound(map.find("c"), map) == nullptr);
 }
