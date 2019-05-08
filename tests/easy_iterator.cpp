@@ -3,8 +3,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <iostream>
-
 #include <easy_iterator.h>
 
 using namespace easy_iterator;

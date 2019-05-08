@@ -59,10 +59,11 @@ namespace easy_iterator {
       }
     };
 
-    template <typename T, typename R, R(T::*Method)()> struct ByMemberCall {
-      R operator () (T &v) { return (v.*Method)(); }
+    template <typename T, typename M, M Method> struct ByMemberCall {
+      using R = decltype((std::declval<T &>().*Method)());
+      R operator () (T &v) const { return (v.*Method)(); }
     };
-    
+
   }
 
   /**
@@ -100,8 +101,9 @@ namespace easy_iterator {
         return getReferenceTuple(v, std::make_index_sequence<sizeof...(Args)>());
       }
     };
-
-    template <typename T, typename R, R(T::*Method)()> struct ByMemberCall {
+    
+    template <typename T, typename M, M Method> struct ByMemberCall {
+      using R = decltype((std::declval<T &>().*Method)());
       R operator () (T &v) const { return (v.*Method)(); }
     };
     
@@ -382,8 +384,8 @@ namespace easy_iterator {
   template <class T> struct MakeIterable {
     mutable Iterator<
       T,
-      increment::ByMemberCall<T, decltype(std::declval<T&>().advance()), &T::advance>,
-      dereference::ByMemberCall<T, decltype(std::declval<T&>().value()), &T::value>,
+      increment::ByMemberCall<T, decltype(&T::advance), &T::advance>,
+    dereference::ByMemberCall<T, decltype(&T::value), &T::value>,
       compare::Never
     > start;
     auto && begin()const{ return std::move(start); }

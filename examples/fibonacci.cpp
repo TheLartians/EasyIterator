@@ -4,8 +4,6 @@
 
 #include <easy_iterator.h>
 
-using namespace easy_iterator;
-
 using integer = unsigned long long;
 
 struct Fibonacci {
@@ -23,16 +21,17 @@ struct Fibonacci {
     return true;
   }
   
-  integer value() {
+  integer value() const {
     return current;
   }
   
 };
 
+using namespace easy_iterator;
+
 int main(){
   for (auto [i,v]: enumerate(MakeIterable<Fibonacci>())){
     std::cout << "Fib_" << i << "\t= " << v << std::endl;
   }
-  std::cout << "done" << std::endl;
   return 0;
 }
