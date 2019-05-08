@@ -453,7 +453,7 @@ namespace easy_iterator {
   /**
    * Removes a value from a container with `find` method.
    */
-  template <class I, class C> bool removeIfFound(const I &it, C &container){
+  template <class I, class C> bool eraseIfFound(const I &it, C &container){
     if (it != container.end()) { 
       container.erase(it);
       return true;
