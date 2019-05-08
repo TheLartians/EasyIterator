@@ -65,13 +65,14 @@ TEST_CASE("Iterator", "[iterator]"){
 
   SECTION("array incrementer"){
     std::vector<int> arr(10);
-    ReferenceIterator<int> it(arr.data());
     SECTION("manual iteration"){
+      ReferenceIterator<int> it(arr.data());
       REQUIRE(&*it == &arr[0]);
       ++it;
       REQUIRE(&*it == &arr[1]);
     }
     SECTION("iterate to end"){
+      ReferenceIterator<int> it(arr.data());
       auto end = Iterator(arr.data() + arr.size());
       REQUIRE(it != end);
       size_t idx = 0;
@@ -81,6 +82,15 @@ TEST_CASE("Iterator", "[iterator]"){
         ++idx;
       }
       REQUIRE(it == end);
+      REQUIRE(idx == 10);
+    }
+    SECTION("valuesBetween"){
+      size_t idx = 0;
+      for (auto &v: valuesBetween(arr.data(), arr.data() + arr.size())) {
+        static_assert(!std::is_const<std::remove_reference<decltype(v)>::type>::value);
+        REQUIRE(&v == &arr[idx]);
+        ++idx;
+      }
       REQUIRE(idx == 10);
     }
    }
@@ -144,7 +154,7 @@ TEST_CASE("Enumerate","[iterator]"){
 }
 
 TEST_CASE("Reverse","[iterator]"){
-  std::vector<int> vec(RangeIterator(0), RangeIterator(10));
+  std::vector<int> vec(rangeValue(0), rangeValue(10));
   int count = 0;
   REQUIRE(vec.size() == 10);
   for (auto [i,v]: enumerate(reverse(vec))){

@@ -127,11 +127,12 @@ namespace easy_iterator {
 
     using value_type = decltype(dereferencer(value));
     IteratorPrototype() = delete;
-    template <class F, class AD = D, class AC = C> IteratorPrototype(
+    template <class F, class AD = D, class AC = C> explicit IteratorPrototype(
       F && first,
       AD && _dereferencer = D(),
       AC && _compare = C()
     ):dereferencer(std::forward<AD>(_dereferencer)),compare(std::forward<AC>(_compare)), value(std::forward<F>(first)) { }
+    
     value_type operator *() {
       return dereferencer(value);
     }
@@ -174,14 +175,25 @@ namespace easy_iterator {
     bool valid = true;
     using Base = IteratorPrototype<T,D,C>;
   public:
-    template <typename TT> explicit Iterator(
+    template <
+      typename TT,
+      typename TF = F,
+      typename TD = D,
+      typename TC = C
+    > explicit Iterator(
       TT && begin,
-      const F & _callback = F(),
-      const D & _dereferencer = D(),
-      const C & _compare = C()
-    ):IteratorPrototype<T,D,C>(std::forward<TT>(begin), _dereferencer, _compare), callback(_callback){ }
+      TF && _callback = F(),
+      TD && _dereferencer = D(),
+      TC && _compare = C()
+    ):IteratorPrototype<T,D,C>(std::forward<TT>(begin), std::forward<TD>(_dereferencer), std::forward<TC>(_compare)), callback(_callback){ }
     Iterator &operator++(){
-      if (valid){ valid = callback(this->value); }
+      if (valid){
+        if constexpr (std::is_same<void, decltype(callback(this->value))>::value) {
+          callback(this->value);
+        } else {
+          valid = callback(this->value);
+        }
+      }
       return *this;
     }
     typename Base::value_type operator *() {
@@ -234,14 +246,17 @@ namespace easy_iterator {
     IE endIterator;
     IB begin() const { return beginIterator; }
     IE end() const { return endIterator; }
-    WrappedIterator(IB && begin, IE && end):beginIterator(std::move(begin)),endIterator(std::move(end)){ }
+    template <
+      class AB,
+      class AE
+    > WrappedIterator(AB && begin, AE && end):beginIterator(std::forward<AB>(begin)),endIterator(std::forward<AE>(end)){ }
   };
 
   /**
    * Wraps two iterators into a container with begin/end methods to match the C++ iterator convention.
    */
-  template <class IB, class IE> WrappedIterator<IB, IE> wrap(IB && a, IE && b) {
-    return WrappedIterator<IB, IE>{std::move(a), std::move(b)};
+  template <class IB, class IE> auto wrap(IB && a, IE && b) {
+    return WrappedIterator<IB, IE>(std::forward<IB>(a), std::forward<IE>(b));
   }
 
   /**
@@ -252,15 +267,17 @@ namespace easy_iterator {
     RangeIterator(const T &start, const T &_increment = 1): IteratorPrototype<T>(start), increment(_increment) {}
     RangeIterator &operator++(){ IteratorPrototype<T>::value += increment; return *this; }
   };
-
-  template <class T> RangeIterator(const T &)->RangeIterator<T>;
   
+  template <class T> RangeIterator<T> rangeValue(T v, T i = 1){
+    return RangeIterator<T>(v, i);
+  }
+
   /**
    * Returns an iterator that increases it's value from `begin` to the first value <= `end` by `increment` for each step.
    */
   template <class T> auto range(T begin, T end, T increment) {
     auto actualEnd = end - ((end - begin) % increment);
-    return wrap(RangeIterator(begin, increment), RangeIterator(actualEnd, increment));
+    return wrap(rangeValue(begin, increment), rangeValue(actualEnd, increment));
   }
 
   /**
@@ -327,7 +344,7 @@ namespace easy_iterator {
   /**
    * Iterates over the dereferenced values between `begin` and `end`.
    */
-  template <class T, class I = increment::ByValue<1>> auto ValuesBetween(T * begin, T * end) {
+  template <class T, class I = increment::ByValue<1>> auto valuesBetween(T * begin, T * end) {
     return wrap(ReferenceIterator<T, I>(begin), Iterator(end));
   }
   

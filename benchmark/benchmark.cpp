@@ -26,7 +26,7 @@ Integer __attribute__ ((noinline)) test_array_iteration (Integer max) {
   using namespace easy_iterator;
   Integer result = 0;
   std::vector<int> values(RangeIterator<Integer>(0), RangeIterator<Integer>(max+1));
-  for (auto &i: ValuesBetween(&values[0],&values[max+1])) {
+  for (auto &i: valuesBetween(&values[0],&values[max+1])) {
     result += i;
   }
   return result;
