@@ -59,8 +59,8 @@ namespace easy_iterator {
       }
     };
 
-    template <typename T, auto(T::*Method)()> struct ByMemberCall {
-      auto operator () (T &v) { return (v.*Method)(); }
+    template <typename T, typename R, R(T::*Method)()> struct ByMemberCall {
+      R operator () (T &v) { return (v.*Method)(); }
     };
     
   }
@@ -382,8 +382,8 @@ namespace easy_iterator {
   template <class T> struct MakeIterable {
     mutable Iterator<
       T,
-      increment::ByMemberCall<T, &T::advance>,
-      dereference::ByMemberCall<T,decltype(std::declval<T&>().value()), &T::value>,
+      increment::ByMemberCall<T, decltype(std::declval<T&>().advance()), &T::advance>,
+      dereference::ByMemberCall<T, decltype(std::declval<T&>().value()), &T::value>,
       compare::Never
     > start;
     auto && begin()const{ return std::move(start); }
