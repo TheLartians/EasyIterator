@@ -40,7 +40,6 @@ struct Fibonacci {
     auto tmp = next;
     next += current;
     current = tmp;
-    return true;
   }
   
   unsigned value() {
