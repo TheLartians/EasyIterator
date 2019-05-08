@@ -390,7 +390,7 @@ namespace easy_iterator {
     auto end()const{ return IterationEnd(); }
     
     explicit MakeIterable(T && value):start(std::move(value)){ }
-    template <typename ... Args> explicit MakeIterable(Args && ... args):start(std::forward<Args>(args)...){ }
+    template <typename ... Args> explicit MakeIterable(Args && ... args):start(T(std::forward<Args>(args)...)){ }
   };
 
   /**
