@@ -4,7 +4,7 @@
 # EasyIterator
 
 EasyIterator aims to be a zero-cost C++17 iterator library that simplifies iterator creation.
-It adds well-known iterators from other languages to C++, such as `range`, `zip` and `enumerate`. 
+It adds well-known generators and iterator combinators from other languages to C++, such as `range`, `zip` and `enumerate`. 
 
 ## Example
 
