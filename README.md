@@ -47,6 +47,8 @@ struct Fibonacci {
   }
 };
 
+using namespace easy_iterator;
+
 for (auto [i,v]: enumerate(MakeIterable<Fibonacci>())){
   std::cout << "Fib_" << i << "\t= " << v << std::endl;
   if (i > 10) break;
