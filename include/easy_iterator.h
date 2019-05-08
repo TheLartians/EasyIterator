@@ -385,7 +385,7 @@ namespace easy_iterator {
     mutable Iterator<
       T,
       increment::ByMemberCall<T, decltype(&T::advance), &T::advance>,
-    dereference::ByMemberCall<T, decltype(&T::value), &T::value>,
+      dereference::ByMemberCall<T, decltype(&T::value), &T::value>,
       compare::Never
     > start;
     auto && begin()const{ return std::move(start); }
