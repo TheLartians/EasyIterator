@@ -439,4 +439,27 @@ namespace easy_iterator {
     for (auto [v1,v2]: zip(a,b)) { v2 = t(v1); }
   }
 
+  /**
+   * Returns a pointer to the value if found
+   */
+  template <class I, class C> decltype(&*std::declval<I>()) found(const I &it, C &container){
+    if (it != container.end()) { 
+      return &*it;
+    } else {
+      return nullptr;
+    }
+  }  
+
+  /**
+   * Removes a value from a container with `find` method.
+   */
+  template <class I, class C> bool eraseIfFound(const I &it, C &container){
+    if (it != container.end()) { 
+      container.erase(it);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }
