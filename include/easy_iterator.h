@@ -377,6 +377,17 @@ namespace easy_iterator {
   }
   
   /**
+   * Base class for custom iterators.
+   * Only required for iterators that must be initialized.
+   */
+  struct EasyIterableBase {
+    /**
+     * Initialized the iterable and returns the state of the iterable after initialization.
+     */
+    bool init() { return true; }
+  };
+  
+  /**
    * Take a class `T` with that defines the methods `T::advance()` and `O T::value()` for any type `O`
    * and wraps it into a single-use iterable class. The return value of `T::advance()` is used to indicate the
    * state of the iterator.
@@ -388,13 +399,19 @@ namespace easy_iterator {
       dereference::ByMemberCall<T, decltype(&T::value), &T::value>,
       compare::Never
     > start;
-    auto && begin()const{ return std::move(start); }
+    
+    auto && begin()const{
+      if constexpr (std::is_base_of<EasyIterableBase, T>::value) {
+        start.state = start.value.init();
+      }
+      return std::move(start);
+    }
     auto end()const{ return IterationEnd(); }
     
     explicit MakeIterable(T && value):start(std::move(value)){ }
     template <typename ... Args> explicit MakeIterable(Args && ... args):start(T(std::forward<Args>(args)...)){ }
   };
-
+  
   /**
    * Iterates over the dereferenced values between `begin` and `end`.
    */

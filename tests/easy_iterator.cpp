@@ -305,5 +305,17 @@ TEST_CASE("MakeIterable","[iterator]"){
     REQUIRE(count == 11);
   }
   
+  SECTION("initialized") {
+    struct Invalid:EasyIterableBase {
+      bool init() { return false; }
+      int value() { REQUIRE(false); return 0; }
+      bool advance() { REQUIRE(false); return true; }
+    };
+    
+    auto it = MakeIterable<Invalid>().begin();
+    REQUIRE(!it);
+    REQUIRE_THROWS_AS(*it, UndefinedIteratorException);
+  }
+  
 }
 
