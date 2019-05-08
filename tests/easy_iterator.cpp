@@ -210,8 +210,14 @@ TEST_CASE("fill","[iterator]"){
 
 TEST_CASE("copy","[iterator]"){
   std::vector<int> vec(10);
-  copy(range(10), vec);
-  for(auto [i, v]: enumerate(vec)){ REQUIRE(v == i); }
+  SECTION("value"){
+    copy(range(10), vec);
+    for(auto [i, v]: enumerate(vec)){ REQUIRE(v == i); }
+  }
+  SECTION("transformed value"){
+    copy(range(10), vec, [](auto v){ return 2*v; });
+    for(auto [i, v]: enumerate(vec)){ REQUIRE(v == 2*i); }
+  }
 }
 
 TEST_CASE("array class", "[iterator]"){
