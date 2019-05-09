@@ -33,15 +33,18 @@ BENCHMARK(EasyRangeLoop);
 
 Integer __attribute__((noinline)) easyCustomRangeLoop(Integer max){
   
-  struct CustomRangeIterator {
+  struct CustomRangeIterator: public easy_iterator::InitializedIterable {
     Integer current, max, step;
+    
     CustomRangeIterator(Integer start,Integer end,Integer increment):
       current(start),
       max(end - ((end - start) % increment)),
       step(increment){
     }
+    
     CustomRangeIterator(Integer start,Integer end):CustomRangeIterator(start,end,1){ }
     CustomRangeIterator(Integer max):CustomRangeIterator(0,max,1){ }
+    
     bool init(){ return current != max; }
     bool advance(){ current += step; return current != max; }
     Integer value(){ return current; }

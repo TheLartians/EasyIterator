@@ -310,6 +310,7 @@ namespace easy_iterator {
    */
   template <class T> struct RangeIterator final: public IteratorPrototype<T, dereference::ByValue> {
     T increment;
+    
     RangeIterator(const T &start, const T &_increment = 1):
       IteratorPrototype<T, dereference::ByValue>(start),
       increment(_increment) {
