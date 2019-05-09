@@ -4,11 +4,13 @@
 # EasyIterator
 
 EasyIterator aims to be a zero-cost C++17 iterator library that simplifies iterator creation.
-It adds well-known generators and iterator combinators from other languages to C++, such as `range`, `zip` and `enumerate`. 
+C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code. This library 
 
 ## Example
 
 ### Iteration
+
+EasyIterator adds well-known generators and iterator combinators from other languages to C++, such as `range`, `zip` and `enumerate`. 
 
 ```cpp
 using namespace easy_iterator;
@@ -29,7 +31,33 @@ for (auto [i, s]: enumerate(strings)) {
 }
 ```
 
-### Simple iterator creation
+### Iterator definition
+
+Most iterator boilerplate code is defined in an `easy_iterator::IteratorPrototype` base class type.
+A possible implementation of the `range` iterable is below.
+
+```cpp
+using namespace easy_iterator;
+
+template <class T> struct RangeIterator: public IteratorPrototype<T, dereference::ByValue> {
+  T increment;
+
+  RangeIterator(const T &start, const T &_increment = 1):
+    IteratorPrototype<T, dereference::ByValue>(start),
+    increment(_increment) {
+  }
+
+  RangeIterator &operator++(){ RangeIterator::value += increment; return *this; }
+};
+
+template <class T> auto range(T end) {
+  return wrap(RangeIterator<T>(begin), RangeIterator<T>(end));
+}
+```
+
+### Iterable algorithms
+
+Algorithms can be easily wrapped into iterators by defining a class that defines `advance()` and `value()` member functions. The code below shows how to define an iterator over Fibonacci numbers.
 
 ```cpp
 struct Fibonacci {
@@ -55,6 +83,28 @@ for (auto [i,v]: enumerate(MakeIterable<Fibonacci>())){
 }
 ```
 
+Algorithms that have an end state can also be definied by returning a the state in the `advance()` method. If the initial state can also be undefined, the iterator should define a `bool init()` method and inherit from `easy_iterator::InitializedIterable`. The code below shows an alternative `range` implementation.
+
+```cpp
+template <class T> struct RangeIterator: public easy_iterator::InitializedIterable {
+  T current, max, step;
+
+  RangeIterator(T start, T end, T increment):
+    current(start),
+    max(end - ((end - start) % increment)),
+    step(increment) { }
+
+  bool init(){ return current != max; }
+  bool advance(){ current += step; return current != max; }
+  T value(){ return current; }
+};
+
+template <class T> auto range(T end) {
+  return easy_iterator::MakeIterable<RangeIterator<T>>(0, end, 1);
+}
+```
+
+
 ## Installation and usage
 
 EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake scripe to install it gloablly.
@@ -67,3 +117,8 @@ CPMAddPackage(
   GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
 )
 ```
+
+## Performance
+
+EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang -O2`). The performance of different functions and approaches can be tested with the included benchmark suite. 
+
