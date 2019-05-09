@@ -314,7 +314,7 @@ TEST_CASE("MakeIterable","[iterator]"){
   }
   
   SECTION("initialized") {
-    struct Invalid:EasyIterableBase {
+    struct Invalid:InitializedIterable {
       bool init() { return false; }
       int value() { REQUIRE(false); return 0; }
       bool advance() { REQUIRE(false); return true; }

@@ -29,7 +29,43 @@ void EasyRangeLoop(benchmark::State& state) {
   }
 }
 
-Integer __attribute__((noinline)) easyForLoop(Integer max){
+BENCHMARK(EasyRangeLoop);
+
+Integer __attribute__((noinline)) easyCustomRangeLoop(Integer max){
+  
+  struct CustomRangeIterator {
+    Integer current, max, step;
+    CustomRangeIterator(Integer start,Integer end,Integer increment):
+      current(start),
+      max(end - ((end - start) % increment)),
+      step(increment){
+    }
+    CustomRangeIterator(Integer start,Integer end):CustomRangeIterator(start,end,1){ }
+    CustomRangeIterator(Integer max):CustomRangeIterator(0,max,1){ }
+    bool init(){ return current != max; }
+    bool advance(){ current += step; return current != max; }
+    Integer value(){ return current; }
+  };
+  
+  Integer result = 0;
+  for (auto i: easy_iterator::MakeIterable<CustomRangeIterator>(max+1)) {
+    result += i;
+  }
+  
+  return result;
+}
+
+void EasyCustomRangeLoop(benchmark::State& state) {
+  Integer max = 100000;
+  benchmark::DoNotOptimize(max);
+  for (auto _ : state) {
+    AssertEqual(easyCustomRangeLoop(max),max*(max+1)/2);
+  }
+}
+
+BENCHMARK(EasyCustomRangeLoop);
+
+Integer __attribute__((noinline)) forLoop(Integer max){
   Integer result = 0;
   for (auto i=0; i<max+1; ++i) {
     result += i;
@@ -41,9 +77,11 @@ void ForLoop(benchmark::State& state) {
   Integer max = 100000;
   benchmark::DoNotOptimize(max);
   for (auto _ : state) {
-    AssertEqual(easyForLoop(max),max*(max+1)/2);
+    AssertEqual(forLoop(max),max*(max+1)/2);
   }
 }
+
+BENCHMARK(ForLoop);
 
 Integer __attribute__((noinline)) easyArrayIteration(const std::vector<int> &values){
   using namespace easy_iterator;
@@ -54,7 +92,6 @@ Integer __attribute__((noinline)) easyArrayIteration(const std::vector<int> &val
   return result;
 }
 
-
 void EasyArrayIteration(benchmark::State& state) {
   Integer max = 10000;
   std::vector<int> values(max+1);
@@ -64,6 +101,9 @@ void EasyArrayIteration(benchmark::State& state) {
     AssertEqual(easyArrayIteration(values) ,max*(max+1)/2);
   }
 }
+
+
+BENCHMARK(EasyArrayIteration);
 
 Integer __attribute__((noinline)) stdArrayIteration(const std::vector<int> &values){
   Integer result = 0;
@@ -83,6 +123,8 @@ void StdArrayIteration(benchmark::State& state) {
   }
 }
 
+BENCHMARK(StdArrayIteration);
+
 void __attribute__((noinline)) easyZipIteration(const std::vector<int> &integers, const std::vector<double> &doubles){
   for (auto [i,d]: easy_iterator::zip(integers, doubles)){
     AssertEqual(i, d);
@@ -99,6 +141,8 @@ void EasyZipIteration(benchmark::State& state) {
     easyZipIteration(integers, doubles);
   }
 }
+
+BENCHMARK(EasyZipIteration);
 
 void __attribute__((noinline)) stdZipIteration(const std::vector<int> &integers, const std::vector<double> &doubles){
   auto i = integers.begin(), ie = integers.end();
@@ -121,6 +165,8 @@ void StdZipIteration(benchmark::State& state) {
   }
 }
 
+BENCHMARK(StdZipIteration);
+
 void __attribute__((noinline)) easyEnumerateIteration(const std::vector<int> &values) {
   for (auto [i, v]: easy_iterator::enumerate(values)) {
     AssertEqual(i, v);
@@ -136,6 +182,8 @@ void EasyEnumerateIteration(benchmark::State& state) {
     easyEnumerateIteration(values);
   }
 }
+
+BENCHMARK(EasyEnumerateIteration);
 
 void __attribute__((noinline)) manualEnumerateIteration(const std::vector<int> &values) {
   auto i = 0;
@@ -155,16 +203,6 @@ void ManualEnumerateIteration(benchmark::State& state) {
   }
 }
 
-BENCHMARK(EasyRangeLoop);
-BENCHMARK(ForLoop);
-
-BENCHMARK(EasyArrayIteration);
-BENCHMARK(StdArrayIteration);
-
-BENCHMARK(EasyZipIteration);
-BENCHMARK(StdZipIteration);
-
-BENCHMARK(EasyEnumerateIteration);
 BENCHMARK(ManualEnumerateIteration);
 
 
