@@ -22,9 +22,9 @@ Integer __attribute__((noinline)) easyRangeLoop(Integer max){
 }
 
 void EasyRangeLoop(benchmark::State& state) {
-  Integer max = 100000;
-  benchmark::DoNotOptimize(max);
+  Integer max = 10000;
   for (auto _ : state) {
+    benchmark::DoNotOptimize(max);
     AssertEqual(easyRangeLoop(max),max*(max+1)/2);
   }
 }
@@ -56,9 +56,9 @@ Integer __attribute__((noinline)) easyCustomRangeLoop(Integer max){
 }
 
 void EasyCustomRangeLoop(benchmark::State& state) {
-  Integer max = 100000;
-  benchmark::DoNotOptimize(max);
+  Integer max = 10000;
   for (auto _ : state) {
+    benchmark::DoNotOptimize(max);
     AssertEqual(easyCustomRangeLoop(max),max*(max+1)/2);
   }
 }
@@ -74,9 +74,9 @@ Integer __attribute__((noinline)) forLoop(Integer max){
 }
 
 void ForLoop(benchmark::State& state) {
-  Integer max = 100000;
-  benchmark::DoNotOptimize(max);
+  Integer max = 10000;
   for (auto _ : state) {
+    benchmark::DoNotOptimize(max);
     AssertEqual(forLoop(max),max*(max+1)/2);
   }
 }
@@ -96,8 +96,8 @@ void EasyArrayIteration(benchmark::State& state) {
   Integer max = 10000;
   std::vector<int> values(max+1);
   easy_iterator::copy(easy_iterator::range(max+1), values);
-  benchmark::DoNotOptimize(values);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(values);
     AssertEqual(easyArrayIteration(values) ,max*(max+1)/2);
   }
 }
@@ -117,8 +117,8 @@ void StdArrayIteration(benchmark::State& state) {
   Integer max = 10000;
   std::vector<int> values(max+1);
   easy_iterator::copy(easy_iterator::range(max+1), values);
-  benchmark::DoNotOptimize(values);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(values);
     AssertEqual(stdArrayIteration(values),max*(max+1)/2);
   }
 }
@@ -138,6 +138,8 @@ void EasyZipIteration(benchmark::State& state) {
   easy_iterator::copy(easy_iterator::range(size), integers);
   easy_iterator::copy(easy_iterator::range(size), doubles);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(integers);
+    benchmark::DoNotOptimize(doubles);
     easyZipIteration(integers, doubles);
   }
 }
@@ -161,6 +163,8 @@ void StdZipIteration(benchmark::State& state) {
   easy_iterator::copy(easy_iterator::range(size), integers);
   easy_iterator::copy(easy_iterator::range(size), doubles);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(integers);
+    benchmark::DoNotOptimize(doubles);
     stdZipIteration(integers, doubles);
   }
 }
@@ -177,8 +181,8 @@ void EasyEnumerateIteration(benchmark::State& state) {
   Integer max = 10000;
   std::vector<int> values(max);
   easy_iterator::copy(easy_iterator::range(max), values);
-  benchmark::DoNotOptimize(values);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(values);
     easyEnumerateIteration(values);
   }
 }
@@ -197,8 +201,8 @@ void ManualEnumerateIteration(benchmark::State& state) {
   Integer max = 10000;
   std::vector<int> values(max);
   easy_iterator::copy(easy_iterator::range(max), values);
-  benchmark::DoNotOptimize(values);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(values);
     manualEnumerateIteration(values);
   }
 }
