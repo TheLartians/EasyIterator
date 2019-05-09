@@ -4,7 +4,8 @@
 # EasyIterator
 
 EasyIterator aims to be a zero-cost C++17 iterator library that simplifies iterator creation.
-C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code. This library 
+C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code.
+The goal of this library is to find alternative and useful ways to use and define C++ iterators. 
 
 ## Example
 
@@ -88,19 +89,14 @@ Algorithms that have an end state can also be definied by returning a the state 
 ```cpp
 template <class T> struct RangeIterator: public easy_iterator::InitializedIterable {
   T current, max, step;
-
-  RangeIterator(T start, T end, T increment):
-    current(start),
-    max(end - ((end - start) % increment)),
-    step(increment) { }
-
-  bool init(){ return current != max; }
+  RangeIterator(T end): current(0), max(end), step(1) { }
   bool advance(){ current += step; return current != max; }
+  bool init(){ return current != max; }
   T value(){ return current; }
 };
 
 template <class T> auto range(T end) {
-  return easy_iterator::MakeIterable<RangeIterator<T>>(0, end, 1);
+  return easy_iterator::MakeIterable<RangeIterator<T>>(end);
 }
 ```
 
@@ -120,5 +116,6 @@ CPMAddPackage(
 
 ## Performance
 
-EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang -O2`). The performance of different functions and approaches can be tested with the included benchmark suite. 
+EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang -O2`).
+The performance of different methods and approaches can be compared with the included benchmark suite. 
 
