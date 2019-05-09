@@ -3,9 +3,8 @@
 
 # EasyIterator
 
-EasyIterator aims to be a zero-cost C++17 iterator library that simplifies iterator creation.
 C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code.
-The goal of this library is to find alternative and useful ways to use and create C++ iterators. 
+The goal of this library is to find alternative and useful ways to use and create C++ iterators without impacting performance and compiler optimizations.
 
 ## Example
 
