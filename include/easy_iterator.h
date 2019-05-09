@@ -145,9 +145,7 @@ namespace easy_iterator {
       AC && _compare = C()
     ):dereferencer(std::forward<AD>(_dereferencer)),compare(std::forward<AC>(_compare)), value(std::forward<F>(first)) { }
     
-    DereferencedType operator *() {
-      return dereferencer(value);
-    }
+    DereferencedType operator *() { return dereferencer(value); }
     auto * operator->()const{ return &**this; }
     template <typename ... Args> bool operator==(const IteratorPrototype<Args...> &other)const{
       return compare(value, other.value);
@@ -377,14 +375,10 @@ namespace easy_iterator {
   }
   
   /**
-   * Base class for custom iterators.
-   * Only required for iterators that must be initialized.
+   * When used as a base class for a iterator type, `MakeIterable` will call the `bool init()` member before iteration.
+   * If `init()` returns false, the iterator is empty.
    */
-  struct EasyIterableBase {
-    /**
-     * Initialized the iterable and returns the state of the iterable after initialization.
-     */
-    bool init() { return true; }
+  struct InitializedIterable {
   };
   
   /**
@@ -397,11 +391,11 @@ namespace easy_iterator {
       T,
       increment::ByMemberCall<T, decltype(&T::advance), &T::advance>,
       dereference::ByMemberCall<T, decltype(&T::value), &T::value>,
-      compare::Never
+      compare::ByValue
     > start;
     
     auto && begin()const{
-      if constexpr (std::is_base_of<EasyIterableBase, T>::value) {
+      if constexpr (std::is_base_of<InitializedIterable, T>::value) {
         start.state = start.value.init();
       }
       return std::move(start);
