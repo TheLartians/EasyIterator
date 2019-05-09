@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/TheLartians/EasyIterator.svg?branch=master)](https://travis-ci.com/TheLartians/EasyIterator)
 [![codecov](https://codecov.io/gh/TheLartians/EasyIterator/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/EasyIterator)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/eda53bd4cfa84a91b10cf814ed0eb04c)](https://www.codacy.com/app/TheLartians/EasyIterator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=TheLartians/EasyIterator&amp;utm_campaign=Badge_Grade)
 
 # EasyIterator
 
