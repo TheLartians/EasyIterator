@@ -116,6 +116,6 @@ CPMAddPackage(
 
 ## Performance
 
-EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang -O2`).
+EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `-O2`).
 The performance of different methods and approaches can be compared with the included benchmark suite. 
 
