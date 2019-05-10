@@ -13,7 +13,7 @@ set_target_properties(EasyIteratorBenchmark PROPERTIES CXX_STANDARD 17)
 
 # ---- Dependencies ----
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/CPM.cmake)
+include(../cmake/CPM.cmake)
 
 if (NOT TARGET EasyIterator)
   CPMAddPackage(
