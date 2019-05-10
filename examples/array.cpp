@@ -35,7 +35,7 @@ int main(){
   MyArray<int> arr(10);
 
   for (auto [i, v]: enumerate(arr)) {
-    arr[i] = i * i;
+    v = i * i;
   }
   
   for (auto [i, v]: enumerate(std::as_const(arr))) {
