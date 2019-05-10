@@ -100,7 +100,6 @@ template <class T> auto range(T end) {
 }
 ```
 
-
 ## Installation and usage
 
 EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake script to install it gloablly.
@@ -118,4 +117,3 @@ CPMAddPackage(
 
 EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang++ -O2`).
 The performance of different methods and approaches can be compared with the included benchmark suite. 
-

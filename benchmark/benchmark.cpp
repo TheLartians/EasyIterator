@@ -1,6 +1,12 @@
 #include <benchmark/benchmark.h>
 #include <easy_iterator.h>
 
+#ifdef COMPARE_WITH_ITERTOOLS
+#include <range.hpp>
+#include <enumerate.hpp>
+#include <zip.hpp>
+#endif
+
 #include <vector>
 #include <iostream>
 
@@ -43,7 +49,7 @@ Integer __attribute__((noinline)) easyCustomRangeLoop(Integer max){
     }
     
     CustomRangeIterator(Integer start,Integer end):CustomRangeIterator(start,end,1){ }
-    CustomRangeIterator(Integer max):CustomRangeIterator(0,max,1){ }
+    explicit CustomRangeIterator(Integer max):CustomRangeIterator(0,max,1){ }
     
     bool init(){ return current != max; }
     bool advance(){ current += step; return current != max; }
@@ -67,6 +73,28 @@ void EasyCustomRangeLoop(benchmark::State& state) {
 }
 
 BENCHMARK(EasyCustomRangeLoop);
+
+#ifdef COMPARE_WITH_ITERTOOLS
+
+Integer __attribute__((noinline)) iterRangeLoop(Integer max){
+  Integer result = 0;
+  for (auto i: iter::range(max+1)) {
+    result += i;
+  }
+  return result;
+}
+
+void IterRangeLoop(benchmark::State& state) {
+  Integer max = 10000;
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(max);
+    AssertEqual(easyRangeLoop(max),max*(max+1)/2);
+  }
+}
+
+BENCHMARK(IterRangeLoop);
+
+#endif
 
 Integer __attribute__((noinline)) forLoop(Integer max){
   Integer result = 0;
@@ -149,6 +177,32 @@ void EasyZipIteration(benchmark::State& state) {
 
 BENCHMARK(EasyZipIteration);
 
+#ifdef COMPARE_WITH_ITERTOOLS
+
+void __attribute__((noinline)) iterZipIteration(const std::vector<int> &integers, const std::vector<double> &doubles){
+  for (auto [i,d]: iter::zip(integers, doubles)){
+    AssertEqual(i, d);
+  }
+}
+
+void IterZipIteration(benchmark::State& state) {
+  Integer size = 10000;
+  std::vector<int> integers(size);
+  std::vector<double> doubles(size);
+  easy_iterator::copy(easy_iterator::range(size), integers);
+  easy_iterator::copy(easy_iterator::range(size), doubles);
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(integers);
+    benchmark::DoNotOptimize(doubles);
+    iterZipIteration(integers, doubles);
+  }
+}
+
+BENCHMARK(IterZipIteration);
+
+#endif
+
+
 void __attribute__((noinline)) stdZipIteration(const std::vector<int> &integers, const std::vector<double> &doubles){
   auto i = integers.begin(), ie = integers.end();
   auto d = doubles.begin();
@@ -191,6 +245,28 @@ void EasyEnumerateIteration(benchmark::State& state) {
 }
 
 BENCHMARK(EasyEnumerateIteration);
+
+#ifdef COMPARE_WITH_ITERTOOLS
+
+void __attribute__((noinline)) iterEnumerateIteration(const std::vector<int> &values) {
+  for (auto [i, v]: iter::enumerate(values)) {
+    AssertEqual(i, v);
+  }
+}
+
+void IterEnumerateIteration(benchmark::State& state) {
+  Integer max = 10000;
+  std::vector<int> values(max);
+  easy_iterator::copy(easy_iterator::range(max), values);
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(values);
+    iterEnumerateIteration(values);
+  }
+}
+
+BENCHMARK(IterEnumerateIteration);
+
+#endif
 
 void __attribute__((noinline)) manualEnumerateIteration(const std::vector<int> &values) {
   auto i = 0;
