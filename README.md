@@ -111,6 +111,9 @@ CPMAddPackage(
   VERSION 1.2
   GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
 )
+
+target_link_libraries(myProject EasyIterator)            
+set_target_properties(myProject PROPERTIES CXX_STANDARD 17)        
 ```
 
 ## Performance
