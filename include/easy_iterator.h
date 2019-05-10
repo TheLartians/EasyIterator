@@ -184,7 +184,6 @@ namespace easy_iterator {
   
   /**
    * IteratorPrototype where advance is defined by the functional held by `F`.
-   * In self-contained iterators the
    */
   template <
     class T,
