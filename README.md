@@ -43,9 +43,9 @@ using namespace easy_iterator;
 template <class T> struct RangeIterator: public IteratorPrototype<T, dereference::ByValue> {
   T increment;
 
-  RangeIterator(const T &start, const T &_increment = 1):
+  RangeIterator(const T &start):
     IteratorPrototype<T, dereference::ByValue>(start),
-    increment(_increment) {
+    increment(1) {
   }
 
   RangeIterator &operator++(){ RangeIterator::value += increment; return *this; }
