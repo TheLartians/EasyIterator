@@ -23,6 +23,6 @@ int main(){
   for (auto [i, s]: enumerate(strings)) {
     std::cout << "strings[" << i << "] = \"" << s << "\"" << std::endl;
   }
-
+  
   return 0;
 }
