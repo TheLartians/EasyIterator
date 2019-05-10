@@ -369,12 +369,6 @@ namespace easy_iterator {
     return zip(wrap(RangeIterator(0), IterationEnd()), t);
   }
 
-  namespace make_iterable_detail {
-    template <class T> struct DefaultConstructor {
-      T operator()()const{ return T(); }
-    };
-  }
-  
   /**
    * When used as a base class for a iterator type, `MakeIterable` will call the `bool init()` member before iteration.
    * If `init()` returns false, the iterator is empty.
