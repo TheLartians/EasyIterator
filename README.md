@@ -5,7 +5,7 @@
 # EasyIterator
 
 C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code.
-The goal of this library is to find alternative and useful ways to use and create C++ iterators without impacting performance or compiler optimizations.
+The goal of this library is to find alternative and useful ways to use and create C++17 iterators without impacting performance or compiler optimizations.
 
 ## Example
 
