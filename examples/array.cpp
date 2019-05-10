@@ -15,7 +15,7 @@ public:
   using iterator = easy_iterator::ReferenceIterator<int>;
   using const_iterator = easy_iterator::ReferenceIterator<const int>;
 
-  MyArray(size_t _size):size(_size),data(new T[_size]){ }
+  explicit MyArray(size_t _size):size(_size),data(new T[_size]){ }
   MyArray(const MyArray &) = delete;
   ~MyArray(){ delete[] data; }
 

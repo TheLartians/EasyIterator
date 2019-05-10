@@ -232,7 +232,7 @@ TEST_CASE("array class", "[iterator]"){
     using iterator = ReferenceIterator<int>;
     using const_iterator = ReferenceIterator<const int>;
 
-    MyArray(size_t _size):size(_size),data(new int[size]){ }
+    explicit MyArray(size_t _size):size(_size),data(new int[size]){ }
     MyArray(const MyArray &) = delete;
     ~MyArray(){ delete[] data; }
 
@@ -275,7 +275,7 @@ TEST_CASE("MakeIterable","[iterator]"){
   struct Countdown {
     unsigned current;
     
-    Countdown(unsigned start): current(start) {}
+    explicit Countdown(unsigned start): current(start) {}
     
     bool advance() {
       if (current == 0) { return false; }
