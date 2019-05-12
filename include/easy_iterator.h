@@ -365,7 +365,7 @@ namespace easy_iterator {
    * Returns an object that is iterated as `[index, value]`.
    */
   template <class T> auto enumerate(T && t){
-    return zip(wrap(RangeIterator(0), IterationEnd()), t);
+    return zip(wrap(RangeIterator<size_t>(0), IterationEnd()), t);
   }
 
   /**
