@@ -130,10 +130,15 @@ namespace easy_iterator {
    * iterators are equal.
    */
   template <class T, typename D = dereference::ByValueReference, typename C = compare::ByValue>
-  class IteratorPrototype
-      : public std::iterator<
-            std::input_iterator_tag,
-            typename std::decay<decltype(std::declval<D>()(std::declval<T &>()))>::type> {
+  class IteratorPrototype {
+  public:
+    // iterator traits
+    using iterator_category = std::input_iterator_tag;
+    using reference = decltype(std::declval<D>()(std::declval<T &>()));
+    using value_type = typename std::decay<reference>::type;
+    using pointer = void;
+    using difference_type = void;
+
   protected:
     D dereferencer;
     C compare;
@@ -281,8 +286,7 @@ namespace easy_iterator {
   /**
    * Helper class for `range()`.
    */
-  template <class T> struct RangeIterator final
-      : public IteratorPrototype<T, dereference::ByValue> {
+  template <class T> struct RangeIterator : public IteratorPrototype<T, dereference::ByValue> {
     T increment;
 
     RangeIterator(const T &start, const T &_increment = 1)
