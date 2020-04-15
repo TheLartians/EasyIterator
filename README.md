@@ -7,7 +7,7 @@
 
 # EasyIterator
 
-C++ iterators and range-based loops are increadibly useful, however defining iterators still requires a large amount of boilerplate code.
+C++ iterators and range-based loops are incredibly useful, however defining iterators still requires a large amount of boilerplate code.
 The goal of this library is to find alternative and useful ways to use and create C++17 iterators without impacting performance or compiler optimizations.
 
 ## Example
@@ -87,7 +87,7 @@ for (auto [i,v]: enumerate(MakeIterable<Fibonacci>())){
 }
 ```
 
-Algorithms that have an end state can also be definied by returning a the state in the `advance()` method. If the initial state can also be undefined, the iterator should define a `bool init()` method and inherit from `easy_iterator::InitializedIterable`. The code below shows an alternative `range` implementation.
+Algorithms that have an end state can also be defined by returning a the state in the `advance()` method. If the initial state can also be undefined, the iterator should define a `bool init()` method and inherit from `easy_iterator::InitializedIterable`. The code below shows an alternative `range` implementation.
 
 ```cpp
 template <class T> struct RangeIterator: public easy_iterator::InitializedIterable {
@@ -105,13 +105,13 @@ template <class T> auto range(T end) {
 
 ## Installation and usage
 
-EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake script to install it gloablly.
+EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake script to install it globally.
 Using the [CPM](https://github.com/TheLartians/CPM) dependency manager, you can also include EasyIterator simply by adding the following to your projects' `CMakeLists.txt`.
 
 ```cmake
 CPMAddPackage(
   NAME EasyIterator
-  VERSION 1.2
+  VERSION 1.4
   GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
 )
 
@@ -119,7 +119,24 @@ target_link_libraries(myProject EasyIterator)
 set_target_properties(myProject PROPERTIES CXX_STANDARD 17)        
 ```
 
+## Test suite
+
+You can run the tests suite included in this repo with the following commands.
+
+```bash
+cmake -Htest -Bbuild/test
+cmake --build build/test
+cmake --build build/test --target test
+```
+
 ## Performance
 
 EasyIterator is designed to come with little or no performance impact compared to handwritten code. For example, using `for(auto i: range(N))` loops create identical assembly compared to regular `for(auto i=0;i<N;++i)` loops (using `clang++ -O2`).
 The performance of different methods and approaches can be compared with the included benchmark suite. 
+You can build and run the benchmark with the following commands:
+
+```bash
+cmake -Hbenchmark -Bbuild/bench -DCMAKE_BUILD_TYPE=Release
+cmake --build build/bench -j8
+./build/bench/EasyIteratorBenchmark
+```
