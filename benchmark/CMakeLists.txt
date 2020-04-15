@@ -49,5 +49,3 @@ add_executable(EasyIteratorBenchmark "benchmark.cpp")
 set_target_properties(EasyIteratorBenchmark PROPERTIES CXX_STANDARD 17)        
 target_link_libraries(EasyIteratorBenchmark benchmark itertools EasyIterator)
 target_compile_definitions(EasyIteratorBenchmark PRIVATE "COMPARE_WITH_ITERTOOLS=1")
-
-
