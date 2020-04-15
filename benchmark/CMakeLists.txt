@@ -18,16 +18,16 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME googlebenchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
+  NAME benchmark
+  GITHUB_REPOSITORY google/benchmark
   VERSION 1.5.0
   OPTIONS
    "BENCHMARK_ENABLE_TESTING Off"
    "BENCHMARK_USE_LIBCXX ON"
 )
 
-if (googlebenchmark_ADDED)
-  # patch google benchmark target
+if (benchmark_ADDED)
+  # patch benchmark target
   set_target_properties(benchmark PROPERTIES CXX_STANDARD 17)
 endif()
 
@@ -38,7 +38,7 @@ CPMAddPackage(
   DOWNLOAD_ONLY Yes
 )
 
-if (googlebenchmark_ADDED)
+if (itertools_ADDED)
   add_library(itertools INTERFACE)
   target_include_directories(itertools INTERFACE ${itertools_SOURCE_DIR})
 endif()
