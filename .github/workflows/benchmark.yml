@@ -1,4 +1,4 @@
-name: Standalone
+name: Benchmark
 
 on: [push]
 
@@ -11,10 +11,10 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: configure
-      run: cmake -Hstandalone -Bbuild
+      run: cmake -Hbenchmark -Bbuild
 
     - name: build
       run: cmake --build build -j4
 
     - name: run
-      run: ./build/Greeter
+      run: ./build/EasyIteratorBenchmark
