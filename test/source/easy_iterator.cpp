@@ -1,25 +1,24 @@
 #include <doctest/doctest.h>
+#include <easy_iterator.h>
+
 #include <functional>
+#include <map>
+#include <string>
 #include <type_traits>
 #include <vector>
-#include <string>
-#include <map>
-
-#include <easy_iterator.h>
 
 using namespace easy_iterator;
 
-TEST_CASE("IteratorPrototype"){
-  
-  struct CountDownIterator: public IteratorPrototype<int> {
+TEST_CASE("IteratorPrototype") {
+  struct CountDownIterator : public IteratorPrototype<int> {
     using IteratorPrototype<int>::IteratorPrototype;
-    CountDownIterator & operator++() {
+    CountDownIterator &operator++() {
       --value;
       return *this;
     }
   };
-  
-  SUBCASE("iteration"){
+
+  SUBCASE("iteration") {
     CountDownIterator iterator(42);
     REQUIRE(*iterator == 42);
     auto expected = *iterator;
@@ -31,47 +30,51 @@ TEST_CASE("IteratorPrototype"){
     REQUIRE(expected == 10);
   }
 
-  SUBCASE("wrapper"){
+  SUBCASE("wrapper") {
     int expected = 10;
-    for (auto i: wrap(CountDownIterator(expected), CountDownIterator(3))) {
+    for (auto i : wrap(CountDownIterator(expected), CountDownIterator(3))) {
       REQUIRE(i == expected);
       --expected;
     }
     REQUIRE(expected == 3);
   }
-  
-  SUBCASE("compare"){
+
+  SUBCASE("compare") {
     REQUIRE(CountDownIterator(1) == CountDownIterator(1));
     REQUIRE(CountDownIterator(1) != CountDownIterator(2));
   }
-
 }
 
-TEST_CASE("Iterator"){
-
-  SUBCASE("values"){
-    auto it = makeIterator(0, +[](int &v){ v++; return true; });
+TEST_CASE("Iterator") {
+  SUBCASE("values") {
+    auto it = makeIterator(
+        0, +[](int &v) {
+          v++;
+          return true;
+        });
     REQUIRE(*it == 0);
     ++it;
     REQUIRE(*it == 1);
-    for (int i=*it;i<10;++i) {
+    for (int i = *it; i < 10; ++i) {
       REQUIRE(*it == i);
       ++it;
     }
     decltype(it) end(100);
-    while (it != end) { ++it; }
+    while (it != end) {
+      ++it;
+    }
     REQUIRE(*it == 100);
   }
 
-  SUBCASE("array incrementer"){
+  SUBCASE("array incrementer") {
     std::vector<int> arr(10);
-    SUBCASE("manual iteration"){
+    SUBCASE("manual iteration") {
       ReferenceIterator<int> it(arr.data());
       REQUIRE(&*it == &arr[0]);
       ++it;
       REQUIRE(&*it == &arr[1]);
     }
-    SUBCASE("iterate to end"){
+    SUBCASE("iterate to end") {
       ReferenceIterator<int> it(arr.data());
       auto end = makeIterator(arr.data() + arr.size());
       REQUIRE(it != end);
@@ -84,68 +87,67 @@ TEST_CASE("Iterator"){
       REQUIRE(it == end);
       REQUIRE(idx == 10);
     }
-    SUBCASE("valuesBetween"){
+    SUBCASE("valuesBetween") {
       size_t idx = 0;
-      for (auto &v: valuesBetween(arr.data(), arr.data() + arr.size())) {
+      for (auto &v : valuesBetween(arr.data(), arr.data() + arr.size())) {
         static_assert(!std::is_const<std::remove_reference<decltype(v)>::type>::value);
         REQUIRE(&v == &arr[idx]);
         ++idx;
       }
       REQUIRE(idx == 10);
     }
-   }
-
+  }
 }
 
-TEST_CASE("Range"){
-  SUBCASE("begin-end-advance"){
+TEST_CASE("Range") {
+  SUBCASE("begin-end-advance") {
     int expected = 3;
-    for (auto i: range(3,28,3)) {
+    for (auto i : range(3, 28, 3)) {
       REQUIRE(i == expected);
       expected = expected + 3;
     }
     REQUIRE(expected == 27);
   }
 
-  SUBCASE("negative advance"){
+  SUBCASE("negative advance") {
     int expected = 28;
-    for (auto i: range(28,1,-2)) {
+    for (auto i : range(28, 1, -2)) {
       REQUIRE(i == expected);
       expected = expected - 2;
     }
     REQUIRE(expected == 2);
   }
 
-  SUBCASE("begin-end"){
+  SUBCASE("begin-end") {
     int expected = 2;
-    for (auto i: range(2,12)) {
+    for (auto i : range(2, 12)) {
       REQUIRE(i == expected);
       expected = expected + 1;
     }
     REQUIRE(expected == 12);
   }
 
-  SUBCASE("end"){
+  SUBCASE("end") {
     int expected = 0;
-    for (auto i: range(10)) {
+    for (auto i : range(10)) {
       REQUIRE(i == expected);
       expected = expected + 1;
     }
     REQUIRE(expected == 10);
   }
-  
-  SUBCASE("modifiers"){
-    auto a = range(5,20,3);
+
+  SUBCASE("modifiers") {
+    auto a = range(5, 20, 3);
     int expected = 5;
-    SUBCASE("copy"){
+    SUBCASE("copy") {
       auto b = a;
-      for (auto i: b) {
+      for (auto i : b) {
         REQUIRE(i == expected);
         expected = expected + 3;
       }
     }
-    SUBCASE("const"){
-      for (auto i: std::as_const(a)) {
+    SUBCASE("const") {
+      for (auto i : std::as_const(a)) {
         REQUIRE(i == expected);
         expected = expected + 3;
       }
@@ -154,22 +156,22 @@ TEST_CASE("Range"){
   }
 }
 
-TEST_CASE("Zip"){
-  SUBCASE("with ranges"){
+TEST_CASE("Zip") {
+  SUBCASE("with ranges") {
     unsigned expected = 0;
-    for (auto [i,j,k]: zip(range(10), range(0,20,2), range(0,30,3))) {
+    for (auto [i, j, k] : zip(range(10), range(0, 20, 2), range(0, 30, 3))) {
       REQUIRE(i == expected);
-      REQUIRE(2*i == j);
-      REQUIRE(3*i == k);
+      REQUIRE(2 * i == j);
+      REQUIRE(3 * i == k);
       expected++;
     }
     REQUIRE(expected == 10);
   }
-  
-  SUBCASE("with arrays"){
+
+  SUBCASE("with arrays") {
     std::vector<int> integers(10);
     unsigned expected = 0;
-    for (auto [i,v]: zip(range(10), integers)) {
+    for (auto [i, v] : zip(range(10), integers)) {
       REQUIRE(i == expected);
       REQUIRE(&integers[i] == &v);
       v = i;
@@ -178,14 +180,12 @@ TEST_CASE("Zip"){
     }
     REQUIRE(expected == 10);
   }
-
-  
 }
 
-TEST_CASE("Enumerate"){
+TEST_CASE("Enumerate") {
   std::vector<int> vec(10);
   int count = 0;
-  for (auto [i,v]: enumerate(vec)){
+  for (auto [i, v] : enumerate(vec)) {
     REQUIRE(i == count);
     REQUIRE(&v == &vec[i]);
     ++count;
@@ -193,51 +193,57 @@ TEST_CASE("Enumerate"){
   REQUIRE(count == 10);
 }
 
-TEST_CASE("Reverse"){
+TEST_CASE("Reverse") {
   std::vector<int> vec(rangeValue(0), rangeValue(10));
   int count = 0;
   REQUIRE(vec.size() == 10);
-  for (auto [i,v]: enumerate(reverse(vec))){
+  for (auto [i, v] : enumerate(reverse(vec))) {
     REQUIRE(v == 9 - i);
     REQUIRE(i == count);
     ++count;
   }
 }
 
-TEST_CASE("fill"){
+TEST_CASE("fill") {
   std::vector<int> vec(10);
   fill(vec, 42);
-  for(auto v: vec){ REQUIRE(v == 42); }
+  for (auto v : vec) {
+    REQUIRE(v == 42);
+  }
 }
 
-TEST_CASE("copy"){
+TEST_CASE("copy") {
   std::vector<int> vec(10);
-  SUBCASE("value"){
+  SUBCASE("value") {
     copy(range(10), vec);
-    for(auto [i, v]: enumerate(vec)){ REQUIRE(v == i); }
+    for (auto [i, v] : enumerate(vec)) {
+      REQUIRE(v == i);
+    }
   }
-  SUBCASE("transformed value"){
-    copy(range(10), vec, [](auto v){ return 2*v; });
-    for(auto [i, v]: enumerate(vec)){ REQUIRE(v == 2*i); }
+  SUBCASE("transformed value") {
+    copy(range(10), vec, [](auto v) { return 2 * v; });
+    for (auto [i, v] : enumerate(vec)) {
+      REQUIRE(v == 2 * i);
+    }
   }
 }
 
-TEST_CASE("array class"){
-
+TEST_CASE("array class") {
   class MyArray {
   private:
     size_t size;
-    int * data;
+    int *data;
+
   public:
     using iterator = ReferenceIterator<int>;
     using const_iterator = ReferenceIterator<const int>;
 
-    explicit MyArray(size_t _size):size(_size),data(new int[size]){ }
+    explicit MyArray(size_t _size) : size(_size), data(new int[size]) {}
     MyArray(const MyArray &) = delete;
-    ~MyArray(){ delete[] data; }
+    ~MyArray() { delete[] data; }
 
-    int &operator[](size_t idx){ return data[idx]; }
-    const int &operator[](size_t idx)const{ return data[idx]; }
+    int &operator[](size_t idx) { return data[idx]; }
+    const int &operator[](size_t idx) const { return data[idx]; }
 
     iterator begin() { return iterator(data); }
     iterator end() { return iterator(data + size); }
@@ -247,9 +253,9 @@ TEST_CASE("array class"){
 
   MyArray array(10);
 
-  SUBCASE("iterate"){
+  SUBCASE("iterate") {
     size_t idx = 0;
-    for (auto &v: array) {
+    for (auto &v : array) {
       REQUIRE(&v == &array[idx]);
       ++idx;
       static_assert(!std::is_const<std::remove_reference<decltype(v)>::type>::value);
@@ -257,38 +263,35 @@ TEST_CASE("array class"){
     REQUIRE(idx == 10);
   }
 
-  SUBCASE("const iterate"){
+  SUBCASE("const iterate") {
     size_t idx = 0;
-    for (auto &v: std::as_const(array)) {
+    for (auto &v : std::as_const(array)) {
       REQUIRE(&v == &array[idx]);
       ++idx;
       static_assert(std::is_const<std::remove_reference<decltype(v)>::type>::value);
     }
     REQUIRE(idx == 10);
   }
-
 }
- 
 
-TEST_CASE("MakeIterable"){
-  
+TEST_CASE("MakeIterable") {
   struct Countdown {
     unsigned current;
-    
-    explicit Countdown(unsigned start): current(start) {}
-    
+
+    explicit Countdown(unsigned start) : current(start) {}
+
     bool advance() {
-      if (current == 0) { return false; }
+      if (current == 0) {
+        return false;
+      }
       current--;
       return true;
     }
-    
-    unsigned value() {
-      return current;
-    }
+
+    unsigned value() { return current; }
   };
-  
-  SUBCASE("iterate"){
+
+  SUBCASE("iterate") {
     auto it = MakeIterable<Countdown>(1).begin();
     REQUIRE(it);
     REQUIRE(it != IterationEnd());
@@ -303,28 +306,33 @@ TEST_CASE("MakeIterable"){
     REQUIRE_THROWS_WITH(*it, "attempt to dereference an undefined iterator");
     REQUIRE(it == IterationEnd());
   }
-  
-  SUBCASE("iterate"){
+
+  SUBCASE("iterate") {
     unsigned count = 0;
-    for (auto v: MakeIterable<Countdown>(10)) {
-      REQUIRE(v == 10-count);
+    for (auto v : MakeIterable<Countdown>(10)) {
+      REQUIRE(v == 10 - count);
       count++;
     }
     REQUIRE(count == 11);
   }
-  
+
   SUBCASE("initialized") {
-    struct Invalid:InitializedIterable {
+    struct Invalid : InitializedIterable {
       bool init() { return false; }
-      int value() { REQUIRE(false); return 0; }
-      bool advance() { REQUIRE(false); return true; }
+      int value() {
+        REQUIRE(false);
+        return 0;
+      }
+      bool advance() {
+        REQUIRE(false);
+        return true;
+      }
     };
-    
+
     auto it = MakeIterable<Invalid>().begin();
     REQUIRE(!it);
     REQUIRE_THROWS_AS(*it, UndefinedIteratorException);
   }
-  
 }
 
 TEST_CASE("eraseIfFound") {
