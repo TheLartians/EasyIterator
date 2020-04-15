@@ -10,24 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     
-    - name: install dependencies # https://stackoverflow.com/questions/35898748/error-using-clang-to-compile-c
+    # https://stackoverflow.com/questions/39332406/install-libc-on-ubuntu
+    - name: install dependencies
       run: |
-        sudo bash -c "cat >> /etc/apt/sources.list" << LLVMAPT
-        # LLVM
-        deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty main
-        deb-src http://llvm.org/apt/trusty/ llvm-toolchain-trusty main
-        # 3.5 
-        deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.5 main
-        deb-src http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.5 main
-        # 3.6 
-        deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.6 main
-        deb-src http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.6 main
-        LLVMAPT
-
-        wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
-
-        sudo apt-get update -y
-        sudo apt-get install -y clang-3.6 lldb-3.6 libc++-dev libc++abi-dev
+        sudo apt-get update
+        sudo apt-get install libc++-dev
 
     - name: configure
       # flags set to avoid strange regular expression backend error: https://github.com/google/benchmark/issues/773
