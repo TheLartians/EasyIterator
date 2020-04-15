@@ -404,7 +404,7 @@ namespace easy_iterator {
 
   /**
    * Returns a pointer to the value if found, otherwise `nullptr`.
-   * Usage: `if(auto v = found(map.find(key),map)){ do_something(v); }`
+   * Usage: `if(auto v = found(map.find(key), map)) { do_something(v); }`
    */
   template <class I, class C> decltype(&*std::declval<I>()) found(const I &it, C &container) {
     if (it != container.end()) {
@@ -416,7 +416,7 @@ namespace easy_iterator {
 
   /**
    * Removes a value from a container with `find` method.
-   * Usage: `eraseIfFound(map.find(key),map);`
+   * Usage: `eraseIfFound(map.find(key), map);`
    */
   template <class I, class C> bool eraseIfFound(const I &it, C &container) {
     if (it != container.end()) {
@@ -425,6 +425,15 @@ namespace easy_iterator {
     } else {
       return false;
     }
+  }
+
+  /**
+   * Returns a pointer to the value if found, otherwise `nullptr`.
+   * Usage: `if(auto v = find(key, map)) { do_something(v); }`
+   */
+  template <class C, class V> auto find(V &&v, C &c) {
+    auto it = c.find(v);
+    return found(it, c);
   }
 
 }  // namespace easy_iterator
