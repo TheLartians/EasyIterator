@@ -1,0 +1,24 @@
+name: Benchmark
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    
+    # https://stackoverflow.com/questions/39332406/install-libc-on-ubuntu
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libc++-dev libc++abi-dev
+
+    - name: configure
+      # flags set to avoid strange regular expression backend error: https://github.com/google/benchmark/issues/773
+      run: cmake -Hbenchmark -Bbuild -DRUN_HAVE_STD_REGEX=0 -DRUN_HAVE_POSIX_REGEX=0
+
+    - name: build
+      run: cmake --build build -j4

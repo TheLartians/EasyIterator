@@ -8,50 +8,44 @@ project(EasyIteratorBenchmark
   LANGUAGES CXX
 )
 
-add_executable(EasyIteratorBenchmark "benchmark.cpp")
-set_target_properties(EasyIteratorBenchmark PROPERTIES CXX_STANDARD 17)        
-
 # ---- Dependencies ----
 
 include(../cmake/CPM.cmake)
 
-if (NOT TARGET EasyIterator)
-  CPMAddPackage(
-    NAME EasyIterator
-    GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
-    GIT_TAG master
-  )
-endif()
-
-target_link_libraries(EasyIteratorBenchmark EasyIterator)
-
+CPMAddPackage(
+  NAME EasyIterator
+  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..
+)
 
 CPMAddPackage(
-  NAME googlebenchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
-  VERSION 1.4.1
+  NAME benchmark
+  GITHUB_REPOSITORY google/benchmark
+  VERSION 1.5.0
   OPTIONS
    "BENCHMARK_ENABLE_TESTING Off"
    "BENCHMARK_USE_LIBCXX ON"
 )
 
-# patch google benchmark target
-set_target_properties(benchmark PROPERTIES CXX_STANDARD 17)        
-target_link_libraries(EasyIteratorBenchmark benchmark)
-
-if (${EASY_ITERATOR_COMPARE_WITH_ITERTOOLS})
-  CPMAddPackage(
-    NAME itertools
-    GIT_REPOSITORY https://github.com/ryanhaining/cppitertools.git
-    VERSION 1.0
-    DOWNLOAD_ONLY Yes
-  )
-
-  CPMGetProperties(itertools)
-  add_library(itertools INTERFACE)
-  target_include_directories(itertools INTERFACE ${itertools_SOURCE_DIR})
-  target_compile_definitions(itertools INTERFACE "COMPARE_WITH_ITERTOOLS=1")
-
-  target_link_libraries(EasyIteratorBenchmark itertools)
+if (benchmark_ADDED)
+  # patch benchmark target
+  set_target_properties(benchmark PROPERTIES CXX_STANDARD 17)
 endif()
 
+CPMAddPackage(
+  NAME itertools
+  GIT_REPOSITORY https://github.com/ryanhaining/cppitertools.git
+  VERSION 1.0
+  DOWNLOAD_ONLY Yes
+)
+
+if (itertools_ADDED)
+  add_library(itertools INTERFACE)
+  target_include_directories(itertools INTERFACE ${itertools_SOURCE_DIR})
+endif()
+
+# ---- Create standalone executable ----
+
+add_executable(EasyIteratorBenchmark "benchmark.cpp")
+set_target_properties(EasyIteratorBenchmark PROPERTIES CXX_STANDARD 17)        
+target_link_libraries(EasyIteratorBenchmark benchmark itertools EasyIterator)
+target_compile_definitions(EasyIteratorBenchmark PRIVATE "COMPARE_WITH_ITERTOOLS=1")
