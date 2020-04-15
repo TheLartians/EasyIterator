@@ -11,8 +11,8 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: configure
-      # cross-compiling flags set to avoid regular expression backend error: https://github.com/google/benchmark/issues/773
-      run: cmake -Hbenchmark -Bbuild -DCMAKE_CROSSCOMPILING=1 -DRUN_HAVE_STD_REGEX=0 -DRUN_HAVE_POSIX_REGEX=0
+      # flags set to avoid strange regular expression backend error: https://github.com/google/benchmark/issues/773
+      run: cmake -Hbenchmark -Bbuild -DRUN_HAVE_STD_REGEX=0 -DRUN_HAVE_POSIX_REGEX=0
 
     - name: build
       run: cmake --build build -j4
