@@ -429,9 +429,9 @@ namespace easy_iterator {
 
   /**
    * Returns a pointer to the value if found, otherwise `nullptr`.
-   * Usage: `if(auto v = find(key, map)) { do_something(v); }`
+   * Usage: `if(auto v = find(map, key)) { do_something(v); }`
    */
-  template <class C, class V> auto find(V &&v, C &c) {
+  template <class C, class V> auto find(C &c, V &&v) {
     auto it = c.find(v);
     return found(it, c);
   }

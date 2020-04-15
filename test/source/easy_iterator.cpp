@@ -353,7 +353,7 @@ TEST_CASE("found") {
   REQUIRE(&found(map.find("a"), map)->second == &map["a"]);
   REQUIRE(!found(map.find("c"), map));
 
-  REQUIRE(find("a", map));
-  REQUIRE(&find("a", map)->second == &map["a"]);
-  REQUIRE(!find("c", map));
+  REQUIRE(find(map, "a"));
+  REQUIRE(&find(map, "a")->second == &map["a"]);
+  REQUIRE(!find(map, "c"));
 }
