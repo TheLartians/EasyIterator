@@ -36,6 +36,7 @@ SET_TARGET_PROPERTIES(EasyIterator-headers PROPERTIES LINKER_LANGUAGE CXX)
 add_library(EasyIterator INTERFACE)
 
 target_compile_options(EasyIterator INTERFACE "$<$<BOOL:${MSVC}>:/permissive->")
+set_target_properties(EasyIterator PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_17)
 
 target_include_directories(EasyIterator
   INTERFACE 
