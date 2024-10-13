@@ -27,16 +27,16 @@ CPMAddPackage(
 
 # ---- Header target ----
 
-FILE(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 add_library(EasyIterator-headers EXCLUDE_FROM_ALL ${headers})
-SET_TARGET_PROPERTIES(EasyIterator-headers PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(EasyIterator-headers PROPERTIES LINKER_LANGUAGE CXX)
 
 # ---- Create library ----
 
 add_library(EasyIterator INTERFACE)
 
 target_compile_options(EasyIterator INTERFACE "$<$<BOOL:${MSVC}>:/permissive->")
-set_target_properties(EasyIterator PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_17)
+set_target_properties(EasyIterator PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_20)
 
 target_include_directories(EasyIterator
   INTERFACE 

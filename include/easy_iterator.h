@@ -123,8 +123,8 @@ namespace easy_iterator {
   /**
    * Base class for simple iterators. Takes several template parameters.
    * Implementations must define `operator++()` to update the value of `value`.
-   * @param `T` - The data type held by the iterator
-   * @param `D` - A functional that dereferences the data. Determines the value type of the
+   * @param `T` - The data type held by the iterator.
+   * @param `D` - A function that dereferences the data. Determines the value type of the
    * iterator.
    * @param `C` - A function that compares two values of type `T`. Used to determine if two
    * iterators are equal.
@@ -155,21 +155,24 @@ namespace easy_iterator {
           value(std::forward<F>(first)) {}
 
     DereferencedType operator*() { return dereferencer(value); }
-    auto *operator-> () const { return &**this; }
-    template <typename... Args> bool operator==(const IteratorPrototype<Args...> &other) const {
-      return compare(value, other.value);
-    }
-    template <typename... Args> bool operator!=(const IteratorPrototype<Args...> &other) const {
-      return !operator==(other);
-    }
+    auto *operator->() const { return &**this; }
+
+    template <typename... LArgs, typename... RArgs>
+    friend bool operator==(const IteratorPrototype<LArgs...> &lhs,
+                           const IteratorPrototype<RArgs...> &rhs);
   };
 
-  template <class T> IteratorPrototype(const T &)->IteratorPrototype<T>;
+  template <typename... LArgs, typename... RArgs>
+  bool operator==(const IteratorPrototype<LArgs...> &lhs, const IteratorPrototype<RArgs...> &rhs) {
+    return lhs.compare(lhs.value, rhs.value);
+  }
 
-  template <class T, typename D> IteratorPrototype(const T &, const D &)->IteratorPrototype<T, D>;
+  template <class T> IteratorPrototype(const T &) -> IteratorPrototype<T>;
+
+  template <class T, typename D> IteratorPrototype(const T &, const D &) -> IteratorPrototype<T, D>;
 
   template <class T, typename D, typename C>
-  IteratorPrototype(const T &, const D &, const C &)->IteratorPrototype<T, D, C>;
+  IteratorPrototype(const T &, const D &, const C &) -> IteratorPrototype<T, D, C>;
 
   namespace iterator_detail {
     struct WithState {
@@ -185,7 +188,7 @@ namespace easy_iterator {
   }  // namespace iterator_detail
 
   /**
-   * IteratorPrototype where advance is defined by the functional held by `F`.
+   * IteratorPrototype where advance is defined by the function held by `F`.
    */
   template <class T, typename F = increment::ByValue<1>, typename D = dereference::ByValueReference,
             typename C = compare::ByValue>
@@ -222,16 +225,10 @@ namespace easy_iterator {
       }
       return Base::dereferencer(Base::value);
     }
-    using Base::operator==;
-    using Base::operator!=;
-    bool operator==(const IterationEnd &other) const { return !operator!=(other); }
-    bool operator!=(const IterationEnd &) const {
-      if constexpr (Iterator::hasState) {
-        return Iterator::state;
-      } else {
-        return true;
-      }
-    }
+
+    template <typename... Args>
+    friend bool operator==(const Iterator<Args...> &lhs, const IterationEnd &);
+
     explicit operator bool() const {
       if constexpr (Iterator::hasState) {
         return Iterator::state;
@@ -241,15 +238,20 @@ namespace easy_iterator {
     }
   };
 
-  template <class T> Iterator(const T &)->Iterator<T>;
+  template <typename... Args>
+  bool operator==(const Iterator<Args...> &lhs, const IterationEnd &) {
+    return !static_cast<bool>(lhs);
+  }
 
-  template <class T, typename F> Iterator(const T &, const F &)->Iterator<T, F>;
+  template <class T> Iterator(const T &) -> Iterator<T>;
+
+  template <class T, typename F> Iterator(const T &, const F &) -> Iterator<T, F>;
 
   template <class T, typename F, typename D>
-  Iterator(const T &, const F &, const D &)->Iterator<T, F, D>;
+  Iterator(const T &, const F &, const D &) -> Iterator<T, F, D>;
 
   template <class T, typename F, typename D, typename C>
-  Iterator(const T &, const F &, const D &, const C &)->Iterator<T, F, D, C>;
+  Iterator(const T &, const F &, const D &, const C &) -> Iterator<T, F, D, C>;
 
   template <class T, typename F = increment::ByValue<1>, typename D = dereference::ByValueReference,
             typename C = compare::ByValue>
@@ -310,17 +312,17 @@ namespace easy_iterator {
   }
 
   /**
-   * Returns an iterator that increases it's value from `begin` to `end` by `1` for each step.
+   * Returns an iterator that increases its value from `begin` to `end` by `1` for each step.
    */
   template <class T> auto range(T begin, T end) { return range<T>(begin, end, 1); }
 
   /**
-   * Returns an iterator that increases it's value from `0` to `end` by `1` for each step.
+   * Returns an iterator that increases its value from `0` to `end` by `1` for each step.
    */
   template <class T> auto range(T end) { return range<T>(0, end); }
 
   /**
-   * Wrappes the `rbegin` and `rend` iterators.
+   * Wraps the `rbegin` and `rend` iterators.
    */
   template <class T> auto reverse(T &v) { return wrap(v.rbegin(), v.rend()); }
 
@@ -328,7 +330,7 @@ namespace easy_iterator {
    * Returns an iterable object where all argument iterators are traversed simultaneously.
    * Behaviour is undefined if the iterators do not have the same length.
    */
-  template <typename... Args> auto zip(Args &&... args) {
+  template <typename... Args> auto zip(Args &&...args) {
     auto begin = Iterator(std::make_tuple(args.begin()...), increment::ByTupleIncrement(),
                           dereference::ByTupleDereference(), compare::ByLastTupleElementMatch());
     auto end = Iterator(std::make_tuple(args.end()...), increment::ByTupleIncrement(),
@@ -344,7 +346,7 @@ namespace easy_iterator {
   }
 
   /**
-   * When used as a base class for a iterator type, `MakeIterable` will call the `bool init()`
+   * When used as a base class for an iterator type, `MakeIterable` will call the `bool init()`
    * member before iteration. If `init()` returns false, the iterator is empty.
    */
   struct InitializedIterable {};
@@ -368,7 +370,7 @@ namespace easy_iterator {
     auto end() const { return IterationEnd(); }
 
     explicit MakeIterable(T &&value) : start(std::move(value)) {}
-    template <typename... Args> explicit MakeIterable(Args &&... args)
+    template <typename... Args> explicit MakeIterable(Args &&...args)
         : start(T(std::forward<Args>(args)...)) {}
   };
 
@@ -380,7 +382,7 @@ namespace easy_iterator {
   }
 
   /**
-   * copy-assigns the given value to every element in a container
+   * Copy-assigns the given value to every element in a container
    */
   template <class T, class A> void fill(A &arr, const T &value) {
     for (auto &v : arr) {
@@ -389,7 +391,7 @@ namespace easy_iterator {
   }
 
   /**
-   * copies values from one container to another.
+   * Copies values from one container to another.
    * @param `a` - the container with values to be copies.
    * @param `b` - the target container.
    * @param `f` (optional) - a function to transform values before copying.

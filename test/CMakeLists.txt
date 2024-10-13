@@ -16,7 +16,7 @@ include(../cmake/CPM.cmake)
 CPMAddPackage(
   NAME doctest
   GITHUB_REPOSITORY onqtam/doctest
-  GIT_TAG 2.3.7
+  GIT_TAG v2.4.11
 )
 
 if (TEST_INSTALLED_VERSION)
@@ -40,7 +40,7 @@ file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 add_executable(EasyIteratorTests ${sources})
 target_link_libraries(EasyIteratorTests doctest EasyIterator)
 
-set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 17)
+set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 20)
 
 # enable compiler warnings
 if (NOT TEST_INSTALLED_VERSION)
@@ -53,11 +53,11 @@ endif()
 
 # ---- Add EasyIteratorTests ----
 
-ENABLE_TESTING() 
+enable_testing() 
 
 # Note: doctest and similar testing frameworks can automatically configure CMake tests
 # For other testing frameworks add the tests target instead:
-# ADD_TEST(EasyIteratorTests EasyIteratorTests)
+# add_test(EasyIteratorTests EasyIteratorTests)
 
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(EasyIteratorTests)
