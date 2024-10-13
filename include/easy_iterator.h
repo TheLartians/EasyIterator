@@ -160,11 +160,22 @@ namespace easy_iterator {
     template <typename... LArgs, typename... RArgs>
     friend bool operator==(const IteratorPrototype<LArgs...> &lhs,
                            const IteratorPrototype<RArgs...> &rhs);
+
+    // required for C++17 or earlier
+    template <typename... LArgs, typename... RArgs>
+    friend bool operator!=(const IteratorPrototype<LArgs...> &lhs,
+                           const IteratorPrototype<RArgs...> &rhs);
   };
 
   template <typename... LArgs, typename... RArgs>
   bool operator==(const IteratorPrototype<LArgs...> &lhs, const IteratorPrototype<RArgs...> &rhs) {
     return lhs.compare(lhs.value, rhs.value);
+  }
+
+  // required for C++17 or earlier
+  template <typename... LArgs, typename... RArgs>
+  bool operator!=(const IteratorPrototype<LArgs...> &lhs, const IteratorPrototype<RArgs...> &rhs) {
+    return !(lhs == rhs);
   }
 
   template <class T> IteratorPrototype(const T &) -> IteratorPrototype<T>;
@@ -228,6 +239,9 @@ namespace easy_iterator {
 
     template <typename... Args>
     friend bool operator==(const Iterator<Args...> &lhs, const IterationEnd &);
+    // required for C++17 or earlier
+    template <typename... Args>
+    friend bool operator!=(const Iterator<Args...> &lhs, const IterationEnd &);
 
     explicit operator bool() const {
       if constexpr (Iterator::hasState) {
@@ -238,9 +252,14 @@ namespace easy_iterator {
     }
   };
 
-  template <typename... Args>
-  bool operator==(const Iterator<Args...> &lhs, const IterationEnd &) {
+  template <typename... Args> bool operator==(const Iterator<Args...> &lhs, const IterationEnd &) {
     return !static_cast<bool>(lhs);
+  }
+
+  // required for C++17 or earlier
+  template <typename... Args>
+  bool operator!=(const Iterator<Args...> &lhs, const IterationEnd &rhs) {
+    return !(lhs == rhs);
   }
 
   template <class T> Iterator(const T &) -> Iterator<T>;

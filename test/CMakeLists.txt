@@ -40,7 +40,7 @@ file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 add_executable(EasyIteratorTests ${sources})
 target_link_libraries(EasyIteratorTests doctest EasyIterator)
 
-set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 20)
+set_target_properties(EasyIteratorTests PROPERTIES CXX_STANDARD 17)
 
 # enable compiler warnings
 if (NOT TEST_INSTALLED_VERSION)
