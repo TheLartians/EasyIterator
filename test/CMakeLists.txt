@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(EasyIteratorTests
   LANGUAGES CXX
@@ -13,11 +13,7 @@ option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
 include(../cmake/CPM.cmake)
 
-CPMAddPackage(
-  NAME doctest
-  GITHUB_REPOSITORY onqtam/doctest
-  GIT_TAG v2.4.11
-)
+CPMAddPackage("gh:doctest/doctest@2.4.11")
 
 if (TEST_INSTALLED_VERSION)
   find_package(EasyIterator REQUIRED)
@@ -28,11 +24,7 @@ else()
   )
 endif()
 
-CPMAddPackage(
-  NAME Format.cmake
-  GITHUB_REPOSITORY TheLartians/Format.cmake
-  VERSION 1.0
-)
+CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
 # ---- Create binary ----
 
