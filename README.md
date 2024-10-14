@@ -106,14 +106,10 @@ template <class T> auto range(T end) {
 ## Installation and usage
 
 EasyIterator is a single-header library, so you can simply download and copy the header into your project, or use the Cmake script to install it globally.
-Using the [CPM](https://github.com/TheLartians/CPM) dependency manager, you can also include EasyIterator simply by adding the following to your projects' `CMakeLists.txt`.
+Using the [CPM](https://github.com/cpm-cmake/CPM.cmake) dependency manager, you can also include EasyIterator simply by adding the following to your projects' `CMakeLists.txt`.
 
 ```cmake
-CPMAddPackage(
-  NAME EasyIterator
-  VERSION 1.4
-  GIT_REPOSITORY https://github.com/TheLartians/EasyIterator.git
-)
+CPMAddPackage("gh:thelartians/easyiterator@1.5")
 
 target_link_libraries(myProject EasyIterator)            
 set_target_properties(myProject PROPERTIES CXX_STANDARD 17)        
