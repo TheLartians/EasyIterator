@@ -1,16 +1,20 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # ---- Project ----
 
-project(EasyIterator 
-  VERSION 1.4
+project(
+  EasyIterator
+  VERSION 1.5
   LANGUAGES CXX
 )
 
 # ---- Include guards ----
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-    message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.")
+  message(
+    FATAL_ERROR
+      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+  )
 endif()
 
 # ---- Add dependencies via CPM ----
@@ -38,10 +42,9 @@ add_library(EasyIterator INTERFACE)
 target_compile_options(EasyIterator INTERFACE "$<$<BOOL:${MSVC}>:/permissive->")
 set_target_properties(EasyIterator PROPERTIES INTERFACE_COMPILE_FEATURES cxx_std_17)
 
-target_include_directories(EasyIterator
-  INTERFACE 
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+target_include_directories(
+  EasyIterator INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 
 # ---- Create an installable target ----
