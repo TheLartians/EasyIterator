@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Install format dependencies
-      run: pip3 install clang-format==14.0.6
+      run: pip3 install clang-format==14.0.6 cmake_format==0.6.11 pyyaml
 
     - name: configure
       run: cmake -Stest -Bbuild
