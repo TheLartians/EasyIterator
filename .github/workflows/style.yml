@@ -18,11 +18,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     
-    - name: Install clang-format
-      run: brew install clang-format
+    - name: Install format dependencies
+      run: pip3 install clang-format==14.0.6
 
     - name: configure
-      run: cmake -Htest -Bbuild
+      run: cmake -Stest -Bbuild
 
     - name: check style
       run: cmake --build build --target check-format
