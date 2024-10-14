@@ -16,7 +16,7 @@ include(../cmake/CPM.cmake)
 CPMAddPackage(
   NAME doctest
   GITHUB_REPOSITORY onqtam/doctest
-  GIT_TAG 2.3.7
+  GIT_TAG v2.4.11
 )
 
 if (TEST_INSTALLED_VERSION)
@@ -53,11 +53,11 @@ endif()
 
 # ---- Add EasyIteratorTests ----
 
-ENABLE_TESTING() 
+enable_testing() 
 
 # Note: doctest and similar testing frameworks can automatically configure CMake tests
 # For other testing frameworks add the tests target instead:
-# ADD_TEST(EasyIteratorTests EasyIteratorTests)
+# add_test(EasyIteratorTests EasyIteratorTests)
 
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(EasyIteratorTests)
