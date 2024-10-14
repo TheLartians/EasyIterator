@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # ---- Project ----
 
 project(EasyIterator 
-  VERSION 1.4
+  VERSION 1.5
   LANGUAGES CXX
 )
 
