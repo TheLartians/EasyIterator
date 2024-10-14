@@ -182,8 +182,8 @@ namespace easy_iterator {
 
   template <class T, typename D> IteratorPrototype(const T &, const D &) -> IteratorPrototype<T, D>;
 
-  template <class T, typename D, typename C>
-  IteratorPrototype(const T &, const D &, const C &) -> IteratorPrototype<T, D, C>;
+  template <class T, typename D, typename C> IteratorPrototype(const T &, const D &, const C &)
+      -> IteratorPrototype<T, D, C>;
 
   namespace iterator_detail {
     struct WithState {
@@ -266,8 +266,8 @@ namespace easy_iterator {
 
   template <class T, typename F> Iterator(const T &, const F &) -> Iterator<T, F>;
 
-  template <class T, typename F, typename D>
-  Iterator(const T &, const F &, const D &) -> Iterator<T, F, D>;
+  template <class T, typename F, typename D> Iterator(const T &, const F &, const D &)
+      -> Iterator<T, F, D>;
 
   template <class T, typename F, typename D, typename C>
   Iterator(const T &, const F &, const D &, const C &) -> Iterator<T, F, D, C>;
