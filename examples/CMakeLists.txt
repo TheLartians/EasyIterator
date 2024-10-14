@@ -8,7 +8,7 @@ project(Examples CXX)
 
 include(../cmake/CPM.cmake)
 
-cpmaddpackage(NAME EasyIterator SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+CPMAddPackage(NAME EasyIterator SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 
 # ---- Create binaries ----
 
