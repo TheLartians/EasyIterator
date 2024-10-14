@@ -27,9 +27,9 @@ CPMAddPackage(
 
 # ---- Header target ----
 
-FILE(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 add_library(EasyIterator-headers EXCLUDE_FROM_ALL ${headers})
-SET_TARGET_PROPERTIES(EasyIterator-headers PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(EasyIterator-headers PROPERTIES LINKER_LANGUAGE CXX)
 
 # ---- Create library ----
 
